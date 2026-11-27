@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 
 /**
@@ -61,4 +62,10 @@ export function maskSecret(value: string | null): string {
 
 export function resetVaultCache(): void {
   keyPromise = null
+}
+
+/** Identifiants des secrets enregistrés, mis à jour en direct (jamais leur valeur). */
+export function useStoredSecretIds(): Set<SecretId> | undefined {
+  const ids = useLiveQuery(() => db.secrets.toCollection().primaryKeys(), [])
+  return ids ? new Set(ids as SecretId[]) : undefined
 }

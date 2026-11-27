@@ -28,7 +28,7 @@ import { TopBar } from '../components/TopBar'
 import type { RecipeRecord } from '../db/db'
 import { modeSummary, relativeTime } from '../lib/format'
 import { errorMessage } from '../lib/mc'
-import { deleteRecipeLocal, prepareImage, saveRecipe, storeImage, syncStateOf, useImageUrl, useRecipe } from '../lib/recipes'
+import { deleteRecipeLocal, prepareImage, releaseImageUrl, saveRecipe, storeImage, syncStateOf, useImageUrl, useRecipe } from '../lib/recipes'
 import { publishRecipe, resolveConflict, unpublishRecipe } from '../lib/sync'
 import { useSettings } from '../lib/settings'
 import { db } from '../db/db'
@@ -60,6 +60,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
   const [draft, setDraft] = useState<Recipe>(rec.recipe)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSaved = useRef(JSON.stringify(rec.recipe))
+  const draftRef = useRef(rec.recipe)
   const [modeStep, setModeStep] = useState<string | null>(null)
   const [busy, setBusy] = useState<null | 'publish' | 'unpublish'>(null)
   const [confirm, setConfirm] = useState<null | 'unpublish' | 'delete'>(null)
@@ -73,13 +74,12 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
     const json = JSON.stringify(rec.recipe)
     if (json !== lastSaved.current && !timer.current) {
       lastSaved.current = json
+      draftRef.current = rec.recipe
       setDraft(rec.recipe)
     }
   }, [rec.recipe])
 
   // Enregistre ce qui reste en attente en quittant l'éditeur.
-  const draftRef = useRef(draft)
-  draftRef.current = draft
   useEffect(
     () => () => {
       if (timer.current) {
@@ -91,6 +91,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
   )
 
   function update(next: Recipe) {
+    draftRef.current = next
     setDraft(next)
     if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(() => {
@@ -134,7 +135,10 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
     const imageId = await storeImage(blob)
     const old = rec.imageId
     await saveRecipe(rec.id, { imageId })
-    if (old && old !== rec.sync.media?.imageId) await db.media.delete(old)
+    if (old && old !== rec.sync.media?.imageId) {
+      await db.media.delete(old)
+      releaseImageUrl(old)
+    }
   }
 
   const setGroup = (gi: number, g: IngredientGroup) =>

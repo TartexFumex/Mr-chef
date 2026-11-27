@@ -9,7 +9,7 @@ import { SessionImport } from '../components/SessionImport'
 import type { ProviderId } from '../db/db'
 import { PROVIDER_ORDER, PROVIDERS } from '../lib/ai'
 import { setSettings, useSettings } from '../lib/settings'
-import { getSecret, hasSecret } from '../lib/vault'
+import { getSecret, useStoredSecretIds } from '../lib/vault'
 
 const STEPS = ['Relais', 'Monsieur Cuisine', 'Robot', 'Intelligence artificielle'] as const
 
@@ -20,26 +20,17 @@ export function Onboarding() {
   const [params] = useSearchParams()
   const [step, setStep] = useState(0)
   const [relaySecret, setRelaySecret] = useState<string | null>(null)
-  const [robot, setRobot] = useState<RobotId>(DEFAULT_ROBOT_ID)
+  const [robotChoice, setRobot] = useState<RobotId | null>(null)
   const [provider, setProvider] = useState<ProviderId>('mistral')
-  const [hasKey, setHasKey] = useState(false)
 
   useEffect(() => {
     void getSecret('relay:secret').then((s) => setRelaySecret(params.get('secret') ?? s ?? ''))
   }, [params])
-  useEffect(() => {
-    if (settings) setRobot(settings.robotId)
-  }, [settings?.robotId]) // eslint-disable-line react-hooks/exhaustive-deps
+  const stored = useStoredSecretIds()
 
-  async function refreshKeys() {
-    for (const p of PROVIDER_ORDER) if (await hasSecret(`ai:${p}`)) return setHasKey(true)
-    setHasKey(false)
-  }
-  useEffect(() => {
-    void refreshKeys()
-  }, [])
-
-  if (!settings || relaySecret === null) return null
+  if (!settings || relaySecret === null || !stored) return null
+  const robot = robotChoice ?? settings.robotId ?? DEFAULT_ROBOT_ID
+  const hasKey = PROVIDER_ORDER.some((p) => stored.has(`ai:${p}`))
   const next = () => setStep((s) => Math.min(STEPS.length - 1, s + 1))
 
   async function finish() {
@@ -132,7 +123,7 @@ export function Onboarding() {
               </button>
             ))}
           </div>
-          <AiKeyEditor key={provider} provider={provider} onChange={() => void refreshKeys()} />
+          <AiKeyEditor key={provider} provider={provider} />
           <div className="row end">
             <button type="button" className="btn ghost" onClick={() => setStep(2)}>
               Retour

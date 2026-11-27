@@ -14,36 +14,28 @@ import { PROVIDER_ORDER, PROVIDERS } from '../lib/ai'
 import { configLink } from '../lib/relay'
 import { countUnpublished, logoutAndWipe } from '../lib/reset'
 import { setSettings, useSettings } from '../lib/settings'
-import { getSecret, hasSecret } from '../lib/vault'
+import { getSecret, useStoredSecretIds } from '../lib/vault'
 
 export function Settings() {
   const settings = useSettings()
   const location = useLocation()
   const [relaySecret, setRelaySecret] = useState<string | null>(null)
-  const [keys, setKeys] = useState<Record<ProviderId, boolean>>({ mistral: false, openai: false, anthropic: false })
-  const [prompt, setPrompt] = useState<string | null>(null)
+  const stored = useStoredSecretIds()
+  const [promptEdit, setPrompt] = useState<string | null>(null)
   const [logout, setLogout] = useState<null | { count: number; titles: string[] }>(null)
   const [wiping, setWiping] = useState(false)
 
-  async function refreshKeys() {
-    const out = { ...keys }
-    for (const p of PROVIDER_ORDER) out[p] = await hasSecret(`ai:${p}`)
-    setKeys(out)
-  }
   useEffect(() => {
     void getSecret('relay:secret').then((s) => setRelaySecret(s ?? ''))
-    void refreshKeys()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (settings && prompt === null) setPrompt(settings.systemPrompt ?? DEFAULT_SYSTEM_PROMPT)
-  }, [settings, prompt])
+  }, [])
 
   useEffect(() => {
     if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView()
   }, [location.hash, settings])
 
-  if (!settings || relaySecret === null || prompt === null) return null
+  if (!settings || relaySecret === null || !stored) return null
+  const keys = Object.fromEntries(PROVIDER_ORDER.map((p) => [p, stored.has(`ai:${p}`)])) as Record<ProviderId, boolean>
+  const prompt = promptEdit ?? settings.systemPrompt ?? DEFAULT_SYSTEM_PROMPT
   const robot = getRobot(settings.robotId)
   const promptChanged = prompt !== (settings.systemPrompt ?? DEFAULT_SYSTEM_PROMPT)
 
@@ -85,7 +77,7 @@ export function Settings() {
                 {PROVIDERS[p].label} {keys[p] ? <span className="badge published">Clé enregistrée</span> : <span className="muted small">(aucune clé)</span>}
               </summary>
               <div style={{ marginTop: 12 }}>
-                <AiKeyEditor provider={p} onChange={() => void refreshKeys()} />
+                <AiKeyEditor provider={p} />
               </div>
             </details>
           ))}

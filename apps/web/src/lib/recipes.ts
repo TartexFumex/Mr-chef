@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { deriveSyncState, recipeHash, type Recipe, type RobotId, type SyncState } from '@mr-chef/recipe-schema'
 import { db, emptySync, type RecipeRecord } from '../db/db'
@@ -48,6 +47,7 @@ export async function deleteRecipeLocal(id: string): Promise<void> {
     await db.recipes.delete(id)
     if (rec?.imageId) await db.media.delete(rec.imageId)
   })
+  releaseImageUrl(rec?.imageId)
 }
 
 export function syncStateOf(rec: Pick<RecipeRecord, 'sync' | 'hash'>): SyncState {
@@ -68,20 +68,27 @@ export async function storeImage(blob: Blob): Promise<string> {
   return id
 }
 
-/** URL objet d'une image locale, libérée automatiquement. */
+// Une URL objet par photo, partagée entre écrans et libérée quand la photo est supprimée.
+const objectUrls = new Map<string, string>()
+
+/** Libère l'URL objet d'une photo supprimée ou remplacée. */
+export function releaseImageUrl(imageId: string | null | undefined): void {
+  if (!imageId) return
+  const u = objectUrls.get(imageId)
+  if (u) URL.revokeObjectURL(u)
+  objectUrls.delete(imageId)
+}
+
+/** URL objet d'une image locale. */
 export function useImageUrl(imageId: string | null | undefined): string | null {
   const media = useLiveQuery(async () => (imageId ? ((await db.media.get(imageId)) ?? null) : null), [imageId])
-  const [url, setUrl] = useState<string | null>(null)
-  useEffect(() => {
-    if (!media) {
-      setUrl(null)
-      return
-    }
-    const u = URL.createObjectURL(media.blob)
-    setUrl(u)
-    return () => URL.revokeObjectURL(u)
-  }, [media])
-  return url
+  if (!media) return null
+  let u = objectUrls.get(media.id)
+  if (!u) {
+    u = URL.createObjectURL(media.blob)
+    objectUrls.set(media.id, u)
+  }
+  return u
 }
 
 /** Réduit une photo avant stockage (max 1600 px, JPEG), pour un envoi rapide. */
