@@ -4,11 +4,12 @@ import { DEFAULT_ROBOT_ID, type RobotId } from '@mr-chef/recipe-schema'
 import { AiKeyEditor } from '../components/AiKeyEditor'
 import { Icon } from '../components/Icon'
 import { Logo } from '../components/Logo'
-import { RelayForm } from '../components/RelayForm'
+import { RelayChooser } from '../components/RelayChooser'
 import { RobotPicker } from '../components/RobotPicker'
 import { SessionImport } from '../components/SessionImport'
 import type { ProviderId } from '../db/db'
 import { PROVIDER_ORDER, PROVIDERS } from '../lib/ai'
+import { hasRelay } from '../lib/mc'
 import { setSettings, useSettings } from '../lib/settings'
 import { getSecret, useStoredSecretIds } from '../lib/vault'
 
@@ -40,9 +41,9 @@ export function Onboarding() {
 
   return (
     <main className="main">
-      <div className="row" style={{ gap: 12 }}>
+      <div className="row" style={{ gap: 12, flexWrap: 'nowrap' }}>
         <Logo size={48} />
-        <h1 style={{ margin: 0 }} className="grow">
+        <h1 style={{ margin: 0, fontSize: '1.5rem' }} className="grow">
           Bienvenue dans Mr Chef
         </h1>
         <Link to="/aide" className="icon-btn" aria-label="Aide">
@@ -69,13 +70,12 @@ export function Onboarding() {
 
       {step === 0 && (
         <section className="card stack">
-          <h2>Votre relais personnel</h2>
-          <RelayForm
-            initialUrl={settings.relayUrl}
-            initialSecret={relaySecret}
-            submitLabel="Enregistrer et continuer"
-            onSaved={next}
-          />
+          <h2>Relais vers Monsieur Cuisine</h2>
+          <p className="muted small">
+            Le site Monsieur Cuisine n’accepte pas les appels d’autres applications : Mr Chef passe par un relais pour publier
+            vos recettes.
+          </p>
+          <RelayChooser relaySecret={relaySecret} onDone={next} />
           <button type="button" className="btn ghost" onClick={next}>
             Passer : je publierai plus tard
           </button>
@@ -85,7 +85,7 @@ export function Onboarding() {
       {step === 1 && (
         <section className="card stack">
           <h2>Connecter Monsieur Cuisine</h2>
-          {settings.relayUrl ? (
+          {hasRelay(settings) ? (
             <SessionImport onConnected={next} />
           ) : (
             <p className="notice warn">Configurez d’abord le relais pour connecter votre compte.</p>

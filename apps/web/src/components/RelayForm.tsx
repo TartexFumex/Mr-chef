@@ -4,7 +4,7 @@ import { McClient } from '@mr-chef/mc-client'
 import { errorMessage } from '../lib/mc'
 import { generateSecret, normalizeRelayUrl } from '../lib/relay'
 import { setSettings } from '../lib/settings'
-import { setSecret } from '../lib/vault'
+import { deleteSecret, setSecret } from '../lib/vault'
 import { toast } from './toast'
 
 /** Adresse et secret du relais personnel, avec test de connexion. */
@@ -26,14 +26,14 @@ export function RelayForm({
 
   async function test(): Promise<boolean> {
     const relayUrl = normalizeRelayUrl(url)
-    if (!relayUrl || !secret.trim()) {
-      setStatus({ kind: 'error', text: 'Renseignez l’adresse et le secret du relais.' })
+    if (!relayUrl) {
+      setStatus({ kind: 'error', text: 'Renseignez l’adresse du relais.' })
       return false
     }
     setBusy(true)
     try {
       const h = await new McClient({ url: relayUrl, secret: secret.trim() }, async () => null).health()
-      setStatus({ kind: 'info', text: `Relais joignable (version ${h.version}).` })
+      setStatus({ kind: 'info', text: `Relais joignable (version ${h.version}${h.public ? ', public' : ''}).` })
       return true
     } catch (e) {
       setStatus({ kind: 'error', text: errorMessage(e) })
@@ -46,8 +46,9 @@ export function RelayForm({
   async function save(e: React.FormEvent) {
     e.preventDefault()
     if (!(await test())) return
-    await setSettings({ relayUrl: normalizeRelayUrl(url) })
-    await setSecret('relay:secret', secret.trim())
+    await setSettings({ relayUrl: normalizeRelayUrl(url), relayMode: 'custom' })
+    if (secret.trim()) await setSecret('relay:secret', secret.trim())
+    else await deleteSecret('relay:secret')
     toast('Relais enregistré.')
     onSaved?.()
   }
@@ -55,7 +56,7 @@ export function RelayForm({
   return (
     <form className="stack" onSubmit={save}>
       <p className="muted small">
-        Le relais est votre petit serveur Cloudflare qui transmet les demandes à Monsieur Cuisine.{' '}
+        Votre propre relais Cloudflare, qui transmet les demandes à Monsieur Cuisine.{' '}
         <Link to="/aide#relais">Guide de mise en place</Link>
       </p>
       <label className="field">
@@ -71,7 +72,7 @@ export function RelayForm({
       </label>
       <label className="field">
         <span>
-          Secret du relais <span className="hint">(identique à RELAY_SHARED_SECRET)</span>
+          Secret du relais <span className="hint">(relais privé seulement, identique à RELAY_SHARED_SECRET)</span>
         </span>
         <input
           type="password"

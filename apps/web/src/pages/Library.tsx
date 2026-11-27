@@ -8,7 +8,7 @@ import { toast, toastError } from '../components/toast'
 import { TopBar } from '../components/TopBar'
 import type { RecipeRecord } from '../db/db'
 import { formatMinutes, relativeTime } from '../lib/format'
-import { errorMessage } from '../lib/mc'
+import { errorMessage, hasRelay } from '../lib/mc'
 import { createRecipeRecord, syncStateOf, useImageUrl, useRecipes } from '../lib/recipes'
 import { useSettings } from '../lib/settings'
 import { processPendingQueue, refreshFromRemote } from '../lib/sync'
@@ -70,7 +70,7 @@ export function Library() {
         <button
           type="button"
           className="btn"
-          disabled={refreshing || !online || !settings?.relayUrl}
+          disabled={refreshing || !online || !hasRelay(settings)}
           onClick={() => void refresh()}
           title={settings?.lastRefreshAt ? `Dernière synchronisation ${relativeTime(settings.lastRefreshAt)}` : undefined}
         >
@@ -93,7 +93,7 @@ export function Library() {
               <Link className="btn primary" to="/">
                 <Icon name="sparkle" /> Générer une recette
               </Link>
-              {settings?.relayUrl && (
+              {hasRelay(settings) && (
                 <button type="button" className="btn" onClick={() => void refresh()} disabled={!online}>
                   Importer depuis Monsieur Cuisine
                 </button>

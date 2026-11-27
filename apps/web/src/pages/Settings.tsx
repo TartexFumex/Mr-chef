@@ -4,7 +4,7 @@ import { DEFAULT_SYSTEM_PROMPT, getRobot } from '@mr-chef/recipe-schema'
 import { AiKeyEditor } from '../components/AiKeyEditor'
 import { Dialog } from '../components/Dialog'
 import { Icon } from '../components/Icon'
-import { RelayForm } from '../components/RelayForm'
+import { RelayChooser } from '../components/RelayChooser'
 import { RobotPicker } from '../components/RobotPicker'
 import { SessionImport } from '../components/SessionImport'
 import { toast } from '../components/toast'
@@ -12,6 +12,7 @@ import { TransferPanel } from '../components/TransferPanel'
 import { TopBar } from '../components/TopBar'
 import type { ProviderId } from '../db/db'
 import { PROVIDER_ORDER, PROVIDERS } from '../lib/ai'
+import { hasRelay } from '../lib/mc'
 import { countUnpublished, logoutAndWipe } from '../lib/reset'
 import { setSettings, useSettings } from '../lib/settings'
 import { getSecret, useStoredSecretIds } from '../lib/vault'
@@ -143,7 +144,7 @@ export function Settings() {
         <section className="section" id="relais">
           <h2>Relais</h2>
           <div className="card stack">
-            <RelayForm initialUrl={settings.relayUrl} initialSecret={relaySecret} onSaved={() => void getSecret('relay:secret').then((s) => setRelaySecret(s ?? ''))} />
+            <RelayChooser relaySecret={relaySecret} />
           </div>
         </section>
 
@@ -167,7 +168,7 @@ export function Settings() {
             ) : (
               <p className="notice warn">Aucun compte connecté.</p>
             )}
-            {settings.relayUrl ? <SessionImport /> : <p className="muted">Configurez d’abord le relais.</p>}
+            {hasRelay(settings) ? <SessionImport /> : <p className="muted">Configurez d’abord le relais.</p>}
           </div>
         </section>
 
