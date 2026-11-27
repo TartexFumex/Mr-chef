@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { fitSettings, type DeviceSettings, type ModeSpec, type RobotProfile, type StepMode } from '@mr-chef/recipe-schema'
+import { fitSettings, modeText, type DeviceSettings, type ModeSpec, type RobotProfile, type StepMode } from '@mr-chef/recipe-schema'
 import { Dialog } from './Dialog'
+import { useLang, useT } from '../i18n'
 
 function temperatureOptions(spec: ModeSpec): number[] {
   const r = spec.temperature!
@@ -25,6 +26,8 @@ export function ModeEditor({
   onClose: () => void
   onSave: (mode: StepMode | null) => void
 }) {
+  const t = useT()
+  const lang = useLang()
   const [type, setType] = useState<string>(mode?.type ?? '')
   const [settings, setSettingsState] = useState<DeviceSettings>(mode?.settings ?? {})
   const spec = robot.modes.find((m) => m.type === type)
@@ -38,39 +41,39 @@ export function ModeEditor({
     <Dialog
       open={open}
       onClose={onClose}
-      title="Programme du robot"
+      title={t.modeEditor.title}
       actions={
         <>
           <button type="button" className="btn ghost" onClick={onClose}>
-            Annuler
+            {t.common.cancel}
           </button>
           <button
             type="button"
             className="btn primary"
             onClick={() => onSave(spec ? { type: spec.type, settings: fitted } : null)}
           >
-            Valider
+            {t.modeEditor.confirm}
           </button>
         </>
       }
     >
       <div className="stack">
         <label className="field">
-          <span>Programme ({robot.name})</span>
+          <span>{t.modeEditor.program(robot.name)}</span>
           <select value={type} onChange={(e) => setType(e.target.value)}>
-            <option value="">Aucun : étape manuelle</option>
+            <option value="">{t.modeEditor.none}</option>
             {robot.modes.map((m) => (
               <option key={m.type} value={m.type}>
-                {m.label}
+                {modeText(m.type, lang).label}
               </option>
             ))}
           </select>
         </label>
-        {spec && <p className="muted small">{spec.hint}</p>}
+        {spec && <p className="muted small">{modeText(spec.type, lang).hint}</p>}
         {spec?.time && (
           <div className="grid2">
             <label className="field">
-              <span>Minutes</span>
+              <span>{t.modeEditor.minutes}</span>
               <input
                 type="number"
                 min={0}
@@ -80,7 +83,7 @@ export function ModeEditor({
               />
             </label>
             <label className="field">
-              <span>Secondes</span>
+              <span>{t.modeEditor.seconds}</span>
               <input
                 type="number"
                 min={0}
@@ -93,11 +96,11 @@ export function ModeEditor({
         )}
         {spec?.temperature && (
           <label className="field">
-            <span>Température</span>
+            <span>{t.modeEditor.temperature}</span>
             <select value={fitted.temperature ?? 0} onChange={(e) => set({ temperature: Number(e.target.value) })}>
-              {temperatureOptions(spec).map((t) => (
-                <option key={t} value={t}>
-                  {t === 0 ? 'Sans chauffe' : `${t} °C`}
+              {temperatureOptions(spec).map((deg) => (
+                <option key={deg} value={deg}>
+                  {deg === 0 ? t.modeEditor.noHeat : `${deg} °C`}
                 </option>
               ))}
             </select>
@@ -106,8 +109,8 @@ export function ModeEditor({
         {spec?.speed && (
           <label className="field">
             <span>
-              Vitesse : <span className="mono">{fitted.speed}</span>
-              {maxSpeed !== spec.speed.max && <span className="hint"> (3 maximum en chauffe)</span>}
+              {t.modeEditor.speed} <span className="mono">{fitted.speed}</span>
+              {maxSpeed !== spec.speed.max && <span className="hint">{t.modeEditor.maxHeating}</span>}
             </span>
             <input
               type="range"
@@ -122,12 +125,12 @@ export function ModeEditor({
         {spec?.clockwise && (
           <label className="check">
             <input type="checkbox" checked={!!fitted.clockwise} onChange={(e) => set({ clockwise: e.target.checked })} />
-            <span>Sens inverse (mélange délicat sans hacher)</span>
+            <span>{t.modeEditor.reverse}</span>
           </label>
         )}
         {spec?.weight && (
           <label className="field">
-            <span>Poids (g)</span>
+            <span>{t.modeEditor.weight}</span>
             <input
               type="number"
               min={spec.weight.min}

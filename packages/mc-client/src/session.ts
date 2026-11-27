@@ -16,7 +16,17 @@ export interface ParsedSession {
   expiresAt: Date | null
 }
 
-export class SessionParseError extends Error {}
+export type SessionParseCode = 'no_cookie' | 'no_login'
+
+export class SessionParseError extends Error {
+  constructor(
+    public readonly code: SessionParseCode,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'SessionParseError'
+  }
+}
 
 const KEEP = /^(wordpress|wp)[-_]|^PHPSESSID$/i
 
@@ -60,12 +70,14 @@ export function parseSessionInput(text: string): ParsedSession {
   }
   if (!kept.size) {
     throw new SessionParseError(
+      'no_cookie',
       'Aucun cookie WordPress trouvé. Copiez une requête « proxy-api » faite sur monsieur-cuisine.com après vous être connecté.',
     )
   }
   const loggedIn = [...kept.entries()].find(([n]) => /^wordpress_logged_in/i.test(n))
   if (!loggedIn) {
     throw new SessionParseError(
+      'no_login',
       'Le cookie de connexion WordPress (wordpress_logged_in…) est absent. Vérifiez que vous êtes bien connecté sur monsieur-cuisine.com.',
     )
   }

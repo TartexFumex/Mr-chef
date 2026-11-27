@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useT } from '../i18n'
 
 interface DetectedBarcode {
   rawValue: string
@@ -17,7 +18,8 @@ export const canScanQr = () => detectorCtor() !== null && !!navigator.mediaDevic
 /** Lecture d'un QR code avec la caméra arrière (API BarcodeDetector du navigateur). */
 export function QrScanner({ onResult, onCancel }: { onResult: (text: string) => void; onCancel: () => void }) {
   const video = useRef<HTMLVideoElement>(null)
-  const [error, setError] = useState<string | null>(null)
+  const t = useT()
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     let stream: MediaStream | null = null
@@ -49,20 +51,20 @@ export function QrScanner({ onResult, onCancel }: { onResult: (text: string) => 
         await video.current.play()
         void tick()
       })
-      .catch(() => setError('Caméra indisponible. Autorisez-la, ou collez le lien à la place.'))
+      .catch(() => setError(true))
 
     return () => {
       stopped = true
       if (timer) clearTimeout(timer)
-      stream?.getTracks().forEach((t) => t.stop())
+      stream?.getTracks().forEach((track) => track.stop())
     }
   }, [onResult])
 
   return (
     <div className="stack">
-      {error ? <p className="notice error">{error}</p> : <video ref={video} className="scanner" muted playsInline />}
+      {error ? <p className="notice error">{t.importPage.noCamera}</p> : <video ref={video} className="scanner" muted playsInline />}
       <button type="button" className="btn" onClick={onCancel}>
-        Arrêter le scan
+        {t.importPage.stopScan}
       </button>
     </div>
   )

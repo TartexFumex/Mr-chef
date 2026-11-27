@@ -1,17 +1,19 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Icon } from '../components/Icon'
+import { InstallPrompt } from '../components/InstallPrompt'
 import { Logo } from '../components/Logo'
 import { generateRecipe, PROVIDERS } from '../lib/ai'
 import { errorMessage } from '../lib/mc'
 import { createRecipeRecord } from '../lib/recipes'
 import { useSettings } from '../lib/settings'
 import { useOnline } from '../components/Banners'
-
-const PLACEHOLDER = 'Décrivez vos envies, une idée de plat ou les ingrédients que vous avez sous la main…'
+import { useLang, useT } from '../i18n'
 
 export function Home() {
   const settings = useSettings()
+  const t = useT()
+  const lang = useLang()
   const navigate = useNavigate()
   const online = useOnline()
   const [wish, setWish] = useState('')
@@ -33,7 +35,7 @@ export function Home() {
     const ctrl = new AbortController()
     abort.current = ctrl
     try {
-      const res = await generateRecipe(wish.trim(), portions, { signal: ctrl.signal })
+      const res = await generateRecipe(wish.trim(), portions, { signal: ctrl.signal, lang })
       // Enregistrement automatique dès réception, avant tout affichage.
       const id = await createRecipeRecord({
         recipe: res.recipe,
@@ -57,24 +59,24 @@ export function Home() {
         <div className="loading" role="status" aria-live="polite">
           <div className="spinner" aria-hidden />
           <p>
-            <strong>Le chef réfléchit à votre recette…</strong>
+            <strong>{t.home.thinking}</strong>
             <br />
             <span className="muted small">
-              {provider?.label} · {model}. Cela prend généralement 10 à 40 secondes.
+              {t.home.duration(provider?.label ?? '', model ?? '')}
             </span>
           </p>
           <button type="button" className="btn" onClick={() => abort.current?.abort()}>
-            Annuler
+            {t.common.cancel}
           </button>
         </div>
       ) : (
         <form onSubmit={generate} className="stack">
           <label className="field">
-            <span className="sr-only">Votre envie</span>
+            <span className="sr-only">{t.home.wishLabel}</span>
             <textarea
               value={wish}
               onChange={(e) => setWish(e.target.value)}
-              placeholder={PLACEHOLDER}
+              placeholder={t.home.placeholder}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void generate(e)
               }}
@@ -82,7 +84,7 @@ export function Home() {
           </label>
           <div className="row">
             <label className="row grow" style={{ gap: 8 }}>
-              <span>Portions</span>
+              <span>{t.home.servings}</span>
               <input
                 type="number"
                 min={1}
@@ -92,30 +94,31 @@ export function Home() {
                 style={{ width: 80 }}
               />
             </label>
-            <span className="muted small">{provider ? `${provider.label}` : 'Aucune IA configurée'}</span>
+            <span className="muted small">{provider ? provider.label : t.home.noAi}</span>
           </div>
-          {!online && <p className="notice warn">La génération nécessite une connexion Internet.</p>}
+          {!online && <p className="notice warn">{t.home.offline}</p>}
           {error && (
             <p className="notice error" role="alert">
               {error}
             </p>
           )}
           <button type="submit" className="btn primary lg block" disabled={!wish.trim() || !online || !provider}>
-            <Icon name="sparkle" /> Générer la recette
+            <Icon name="sparkle" /> {t.home.generate}
           </button>
         </form>
       )}
-      <nav className="home-links" aria-label="Navigation">
+      <nav className="home-links" aria-label={t.home.nav}>
         <Link to="/recettes" className="btn">
-          <Icon name="book" /> Mes recettes
+          <Icon name="book" /> {t.nav.recipes}
         </Link>
         <Link to="/parametres" className="btn">
-          <Icon name="settings" /> Paramètres
+          <Icon name="settings" /> {t.nav.settings}
         </Link>
         <Link to="/aide" className="btn">
-          <Icon name="help" /> Aide
+          <Icon name="help" /> {t.nav.help}
         </Link>
       </nav>
+      {!busy && <InstallPrompt />}
     </main>
   )
 }

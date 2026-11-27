@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { useT } from '../i18n'
 import { useSettings } from '../lib/settings'
 import { Icon } from './Icon'
 
@@ -23,6 +24,7 @@ export function useOnline(): boolean {
 export function Banners() {
   const online = useOnline()
   const settings = useSettings()
+  const t = useT()
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
@@ -33,22 +35,22 @@ export function Banners() {
       {!online && (
         <div className="banner warn" role="status">
           <Icon name="cloudOff" />
-          <span>Hors ligne. Vos recettes restent modifiables ; les envois partiront au retour du réseau.</span>
+          <span>{t.banners.offline}</span>
         </div>
       )}
       {settings?.onboardingDone && settings.sessionExpired && (
         <div className="banner error" role="alert">
-          <span className="grow">Session Monsieur Cuisine expirée.</span>
-          <Link to="/parametres#session">Reconnecter</Link>
+          <span className="grow">{t.banners.sessionExpired}</span>
+          <Link to="/parametres#session">{t.banners.reconnect}</Link>
         </div>
       )}
       {needRefresh && (
         <div className="banner info" role="status">
-          <span className="grow">Une nouvelle version de Mr Chef est prête.</span>
+          <span className="grow">{t.banners.update}</span>
           <button type="button" className="btn ghost" onClick={() => void updateServiceWorker(true)}>
-            Mettre à jour
+            {t.banners.updateNow}
           </button>
-          <button type="button" className="icon-btn" aria-label="Plus tard" onClick={() => setNeedRefresh(false)}>
+          <button type="button" className="icon-btn" aria-label={t.banners.later} onClick={() => setNeedRefresh(false)}>
             <Icon name="close" />
           </button>
         </div>

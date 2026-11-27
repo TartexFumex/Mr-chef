@@ -5,11 +5,13 @@ import { errorMessage } from '../lib/mc'
 import { getSettings, setSettings, useSettings } from '../lib/settings'
 import { deleteSecret, getSecret, maskSecret, setSecret } from '../lib/vault'
 import { toast } from './toast'
+import { useT } from '../i18n'
 
 /** Ajout, modification ou suppression de la clé d'un fournisseur et choix de son modèle. */
 export function AiKeyEditor({ provider: id, onChange }: { provider: ProviderId; onChange?: () => void }) {
   const provider = PROVIDERS[id]
   const settings = useSettings()
+  const t = useT()
   const [stored, setStored] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState('')
@@ -57,7 +59,7 @@ export function AiKeyEditor({ provider: id, onChange }: { provider: ProviderId; 
       setStored(key)
       setValue('')
       setEditing(false)
-      toast(unverified ? `Clé ${provider.label} enregistrée sans vérification (fournisseur injoignable).` : `Clé ${provider.label} enregistrée.`)
+      toast(unverified ? t.ai.savedUnverified(provider.label) : t.ai.saved(provider.label))
       onChange?.()
     } catch (err) {
       setError(errorMessage(err))
@@ -78,7 +80,7 @@ export function AiKeyEditor({ provider: id, onChange }: { provider: ProviderId; 
       }
       await setSettings({ activeProvider: next })
     }
-    toast(`Clé ${provider.label} supprimée.`)
+    toast(t.ai.deleted(provider.label))
     onChange?.()
   }
 
@@ -91,19 +93,19 @@ export function AiKeyEditor({ provider: id, onChange }: { provider: ProviderId; 
         <div className="row">
           <span className="mono grow">{maskSecret(stored)}</span>
           <button type="button" className="btn" onClick={() => setEditing(true)}>
-            Modifier
+            {t.common.edit}
           </button>
           <button type="button" className="btn ghost" onClick={() => void remove()}>
-            Supprimer
+            {t.common.delete}
           </button>
         </div>
       ) : (
         <form className="stack" onSubmit={save}>
           <label className="field">
             <span>
-              Clé API {provider.label}{' '}
+              {t.ai.keyLabel(provider.label)}{' '}
               <a className="hint" href={provider.keyUrl} target="_blank" rel="noreferrer">
-                (obtenir une clé)
+                {t.ai.getKey}
               </a>
             </span>
             <input
@@ -117,11 +119,11 @@ export function AiKeyEditor({ provider: id, onChange }: { provider: ProviderId; 
           </label>
           <div className="row">
             <button type="submit" className="btn primary" disabled={busy || !value.trim()}>
-              {busy ? 'Vérification…' : 'Vérifier et enregistrer'}
+              {busy ? t.ai.checking : t.ai.verify}
             </button>
             {stored && (
               <button type="button" className="btn ghost" onClick={() => setEditing(false)}>
-                Annuler
+                {t.common.cancel}
               </button>
             )}
           </div>
@@ -134,7 +136,7 @@ export function AiKeyEditor({ provider: id, onChange }: { provider: ProviderId; 
       )}
       {stored && (
         <label className="field">
-          <span>Modèle</span>
+          <span>{t.ai.model}</span>
           <select
             value={model}
             onChange={(e) => void setSettings({ models: { ...settings?.models, [id]: e.target.value } })}

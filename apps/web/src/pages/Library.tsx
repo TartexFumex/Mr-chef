@@ -12,17 +12,14 @@ import { errorMessage, hasRelay } from '../lib/mc'
 import { createRecipeRecord, syncStateOf, useImageUrl, useRecipes } from '../lib/recipes'
 import { useSettings } from '../lib/settings'
 import { processPendingQueue, refreshFromRemote } from '../lib/sync'
+import { useT } from '../i18n'
 
 type Filter = 'all' | 'local' | 'published' | 'desynced'
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: 'all', label: 'Toutes' },
-  { id: 'local', label: 'Locales' },
-  { id: 'published', label: 'Publiées' },
-  { id: 'desynced', label: 'Désynchronisées' },
-]
+const FILTERS: Filter[] = ['all', 'local', 'published', 'desynced']
 
 export function Library() {
   const recipes = useRecipes()
+  const t = useT()
   const settings = useSettings()
   const online = useOnline()
   const navigate = useNavigate()
@@ -35,13 +32,14 @@ export function Library() {
     try {
       await processPendingQueue()
       const r = await refreshFromRemote()
+      const rep = t.library.report
       const parts = [
-        r.imported && `${r.imported} importée${r.imported > 1 ? 's' : ''}`,
-        r.updated && `${r.updated} mise${r.updated > 1 ? 's' : ''} à jour`,
-        r.conflicts && `${r.conflicts} en conflit`,
-        r.detached && `${r.detached} retirée${r.detached > 1 ? 's' : ''} du compte`,
+        r.imported && rep.imported(r.imported),
+        r.updated && rep.updated(r.updated),
+        r.conflicts && rep.conflicts(r.conflicts),
+        r.detached && rep.detached(r.detached),
       ].filter(Boolean)
-      toast(parts.length ? `Synchronisé : ${parts.join(', ')}.` : 'Tout est à jour.')
+      toast(parts.length ? rep.done(parts.join(', ')) : rep.upToDate)
     } catch (e) {
       toastError(errorMessage(e))
     } finally {
@@ -51,7 +49,7 @@ export function Library() {
 
   async function createBlank() {
     const id = await createRecipeRecord({
-      recipe: emptyRecipe(),
+      recipe: emptyRecipe({ title: t.editor.newRecipe, group: t.editor.ingredientsGroup }),
       robotId: settings!.robotId,
       origin: { provider: 'manual', model: null, prompt: null },
     })
@@ -66,36 +64,36 @@ export function Library() {
 
   return (
     <>
-      <TopBar title="Mes recettes">
+      <TopBar title={t.library.title}>
         <button
           type="button"
           className="btn"
           disabled={refreshing || !online || !hasRelay(settings)}
           onClick={() => void refresh()}
-          title={settings?.lastRefreshAt ? `Dernière synchronisation ${relativeTime(settings.lastRefreshAt)}` : undefined}
+          title={settings?.lastRefreshAt ? t.library.lastSync(relativeTime(settings.lastRefreshAt)) : undefined}
         >
-          <Icon name="refresh" /> {refreshing ? 'Synchro…' : 'Synchroniser'}
+          <Icon name="refresh" /> {refreshing ? t.library.syncing : t.library.sync}
         </button>
       </TopBar>
       <main className="main stack">
-        <input type="search" placeholder="Rechercher une recette" aria-label="Rechercher" value={query} onChange={(e) => setQuery(e.target.value)} />
-        <div className="chips" role="group" aria-label="Filtrer">
+        <input type="search" placeholder={t.library.search} aria-label={t.library.searchLabel} value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div className="chips" role="group" aria-label={t.library.filter}>
           {FILTERS.map((f) => (
-            <button key={f.id} type="button" className="chip" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>
-              {f.label}
+            <button key={f} type="button" className="chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>
+              {t.library[f]}
             </button>
           ))}
         </div>
         {recipes && recipes.length === 0 ? (
           <div className="card stack" style={{ textAlign: 'center' }}>
-            <p>Aucune recette pour l’instant.</p>
+            <p>{t.library.empty}</p>
             <div className="row" style={{ justifyContent: 'center' }}>
               <Link className="btn primary" to="/">
-                <Icon name="sparkle" /> Générer une recette
+                <Icon name="sparkle" /> {t.library.generateOne}
               </Link>
               {hasRelay(settings) && (
                 <button type="button" className="btn" onClick={() => void refresh()} disabled={!online}>
-                  Importer depuis Monsieur Cuisine
+                  {t.library.importMc}
                 </button>
               )}
             </div>
@@ -105,11 +103,11 @@ export function Library() {
             {shown.map((r) => (
               <RecipeItem key={r.id} rec={r} />
             ))}
-            {recipes && shown.length === 0 && <li className="muted">Aucune recette ne correspond.</li>}
+            {recipes && shown.length === 0 && <li className="muted">{t.library.noMatch}</li>}
           </ul>
         )}
         <button type="button" className="btn block" onClick={() => void createBlank()}>
-          <Icon name="plus" /> Nouvelle recette vierge
+          <Icon name="plus" /> {t.library.blank}
         </button>
       </main>
     </>
@@ -118,16 +116,17 @@ export function Library() {
 
 function RecipeItem({ rec }: { rec: RecipeRecord }) {
   const url = useImageUrl(rec.imageId)
+  const t = useT()
   return (
     <li className="recipe-item">
       <Link to={`/recette/${rec.id}`} className="row grow" style={{ flexWrap: 'nowrap', gap: 12 }}>
         {url ? <img className="thumb" src={url} alt="" /> : <span className="thumb" aria-hidden><Icon name="book" /></span>}
         <span className="grow">
-          <h3>{rec.title || 'Sans titre'}</h3>
+          <h3>{rec.title || t.library.untitled}</h3>
           <span className="row small muted" style={{ gap: 8 }}>
             <StatusBadge rec={rec} />
             <span>{formatMinutes(rec.recipe.readyInTime)}</span>
-            <span>· modifiée {relativeTime(rec.updatedAt)}</span>
+            <span>{t.library.modified(relativeTime(rec.updatedAt))}</span>
           </span>
         </span>
       </Link>

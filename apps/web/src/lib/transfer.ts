@@ -2,6 +2,7 @@ import type { RobotId } from '@mr-chef/recipe-schema'
 import type { ProviderId } from '../db/db'
 import { getSettings, setSettings, type Settings } from './settings'
 import { getSecret, setSecret, type SecretId } from './vault'
+import { tr } from '../i18n'
 
 /**
  * Transfert de configuration entre appareils (QR code ou lien).
@@ -27,7 +28,14 @@ export interface TransferChoice {
   mc: boolean
 }
 
-export class TransferError extends Error {}
+export type TransferErrorCode = 'unreadable' | 'version' | 'passphrase' | 'old_browser'
+
+export class TransferError extends Error {
+  constructor(public readonly code: TransferErrorCode) {
+    super(tr().errors.transfer[code])
+    this.name = 'TransferError'
+  }
+}
 
 const PROVIDERS: ProviderId[] = ['mistral', 'openai', 'anthropic']
 const ITERATIONS = 600_000
@@ -41,8 +49,18 @@ export function generatePassphrase(): string {
   return [0, 4, 8, 12].map((i) => chars.slice(i, i + 4).join('')).join('-')
 }
 
+/**
+ * Met en forme la saisie de la phrase secrète : majuscules, tiret toutes les 4 lettres,
+ * 16 caractères au plus (ex. « abcd ef » devient « ABCD-EF »).
+ */
+export function formatPassphraseInput(value: string): string {
+  const raw = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16)
+  return raw.match(/.{1,4}/g)?.join('-') ?? ''
+}
+
+/** Forme canonique XXXX-XXXX-XXXX-XXXX, quelle que soit la façon dont la phrase a été tapée. */
 function normalizePassphrase(p: string): string {
-  return p.trim().toUpperCase().replace(/\s+/g, '')
+  return formatPassphraseInput(p)
 }
 
 export async function buildBundle(choice: TransferChoice): Promise<TransferBundle> {
@@ -136,22 +154,22 @@ export async function decryptBundle(code: string, passphrase: string): Promise<T
   try {
     bytes = fromB64Url(code.trim())
   } catch {
-    throw new TransferError('Code de configuration illisible.')
+    throw new TransferError('unreadable')
   }
-  if (bytes.length < 31 || bytes[0] !== FORMAT) throw new TransferError('Code de configuration illisible ou d’une autre version de Mr Chef.')
+  if (bytes.length < 31 || bytes[0] !== FORMAT) throw new TransferError('version')
   const key = await deriveKey(passphrase, bytes.slice(2, 18))
   let plain: Uint8Array
   try {
     plain = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.slice(18, 30) }, key, bytes.slice(30)))
   } catch {
-    throw new TransferError('Phrase secrète incorrecte.')
+    throw new TransferError('passphrase')
   }
   if (bytes[1] === 1) {
-    if (!canCompress()) throw new TransferError('Ce navigateur est trop ancien pour lire ce code.')
+    if (!canCompress()) throw new TransferError('old_browser')
     plain = await pipe(plain, new DecompressionStream('deflate-raw'))
   }
   const bundle = JSON.parse(new TextDecoder().decode(plain)) as TransferBundle
-  if (bundle?.v !== 1) throw new TransferError('Code de configuration d’une autre version de Mr Chef.')
+  if (bundle?.v !== 1) throw new TransferError('version')
   return bundle
 }
 
@@ -168,11 +186,12 @@ export function extractCode(text: string): string {
 }
 
 export function describeBundle(b: TransferBundle): string[] {
+  const c = tr().transfer.contents
   const out: string[] = []
-  if (b.relay) out.push(`Relais : ${b.relay.url}`)
-  if (b.ai) out.push(`Clés IA : ${Object.keys(b.ai).join(', ')}`)
-  if (b.mc) out.push(`Session Monsieur Cuisine${b.mc.user ? ` (${b.mc.user})` : ''}`)
-  if (b.prefs) out.push(`Réglages : robot, modèles, prompt, portions`)
+  if (b.relay) out.push(c.relay(b.relay.url))
+  if (b.ai) out.push(c.ai(Object.keys(b.ai).join(', ')))
+  if (b.mc) out.push(c.mc(b.mc.user))
+  if (b.prefs) out.push(c.prefs)
   return out
 }
 

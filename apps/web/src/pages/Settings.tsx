@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { DEFAULT_SYSTEM_PROMPT, getRobot } from '@mr-chef/recipe-schema'
+import { defaultSystemPrompt, getRobot } from '@mr-chef/recipe-schema'
 import { AiKeyEditor } from '../components/AiKeyEditor'
 import { Dialog } from '../components/Dialog'
 import { Icon } from '../components/Icon'
+import { LanguagePicker } from '../components/LanguagePicker'
 import { RelayChooser } from '../components/RelayChooser'
 import { RobotPicker } from '../components/RobotPicker'
 import { SessionImport } from '../components/SessionImport'
@@ -16,9 +17,12 @@ import { hasRelay } from '../lib/mc'
 import { countUnpublished, logoutAndWipe } from '../lib/reset'
 import { setSettings, useSettings } from '../lib/settings'
 import { getSecret, useStoredSecretIds } from '../lib/vault'
+import { useLang, useT } from '../i18n'
 
 export function Settings() {
   const settings = useSettings()
+  const t = useT()
+  const lang = useLang()
   const location = useLocation()
   const [relaySecret, setRelaySecret] = useState<string | null>(null)
   const stored = useStoredSecretIds()
@@ -36,9 +40,10 @@ export function Settings() {
 
   if (!settings || relaySecret === null || !stored) return null
   const keys = Object.fromEntries(PROVIDER_ORDER.map((p) => [p, stored.has(`ai:${p}`)])) as Record<ProviderId, boolean>
-  const prompt = promptEdit ?? settings.systemPrompt ?? DEFAULT_SYSTEM_PROMPT
+  const defaultPrompt = defaultSystemPrompt(lang)
+  const prompt = promptEdit ?? settings.systemPrompt ?? defaultPrompt
   const robot = getRobot(settings.robotId)
-  const promptChanged = prompt !== (settings.systemPrompt ?? DEFAULT_SYSTEM_PROMPT)
+  const promptChanged = prompt !== (settings.systemPrompt ?? defaultPrompt)
 
   async function doLogout() {
     setWiping(true)
@@ -50,24 +55,31 @@ export function Settings() {
 
   return (
     <>
-      <TopBar title="Paramètres">
-        <Link to="/aide" className="icon-btn" aria-label="Aide">
+      <TopBar title={t.settings.title}>
+        <Link to="/aide" className="icon-btn" aria-label={t.common.help}>
           <Icon name="help" />
         </Link>
       </TopBar>
       <main className="main">
+        <section className="section" id="langue">
+          <h2>{t.lang.label}</h2>
+          <div className="card stack">
+            <LanguagePicker />
+          </div>
+        </section>
+
         <section className="section" id="ia">
           <h2>
-            <Icon name="key" /> Intelligence artificielle
+            <Icon name="key" /> {t.settings.ai}
           </h2>
           <div className="card stack">
             <label className="field">
-              <span>Fournisseur actif</span>
+              <span>{t.settings.activeProvider}</span>
               <select
                 value={settings.activeProvider ?? ''}
                 onChange={(e) => void setSettings({ activeProvider: (e.target.value || null) as ProviderId | null })}
               >
-                {!settings.activeProvider && <option value="">Aucun</option>}
+                {!settings.activeProvider && <option value="">{t.settings.none}</option>}
                 {PROVIDER_ORDER.filter((p) => keys[p]).map((p) => (
                   <option key={p} value={p}>
                     {PROVIDERS[p].label}
@@ -79,7 +91,7 @@ export function Settings() {
           {PROVIDER_ORDER.map((p) => (
             <details key={p} className="card" open={keys[p] || undefined}>
               <summary style={{ cursor: 'pointer', fontWeight: 600, minHeight: 32 }}>
-                {PROVIDERS[p].label} {keys[p] ? <span className="badge published">Clé enregistrée</span> : <span className="muted small">(aucune clé)</span>}
+                {PROVIDERS[p].label} {keys[p] ? <span className="badge published">{t.settings.keySaved}</span> : <span className="muted small">{t.settings.noKey}</span>}
               </summary>
               <div style={{ marginTop: 12 }}>
                 <AiKeyEditor provider={p} />
@@ -89,11 +101,11 @@ export function Settings() {
         </section>
 
         <section className="section" id="robot">
-          <h2>Robot</h2>
+          <h2>{t.settings.robot}</h2>
           <div className="card stack">
             <RobotPicker value={settings.robotId} onChange={(robotId) => void setSettings({ robotId })} />
             <label className="row">
-              <span className="grow">Portions par défaut</span>
+              <span className="grow">{t.settings.defaultServings}</span>
               <input
                 type="number"
                 min={1}
@@ -107,77 +119,77 @@ export function Settings() {
         </section>
 
         <section className="section" id="prompt">
-          <h2>Prompt système</h2>
+          <h2>{t.settings.prompt}</h2>
           <div className="card stack">
             <p className="muted small">
-              Consignes données à l’IA avant votre demande. <span className="mono">{'{{robot}}'}</span> devient « {robot.name} » et{' '}
-              <span className="mono">{'{{programs}}'}</span> la liste de ses programmes.
+              {t.settings.promptIntro(robot.name)}
             </p>
-            <textarea rows={14} className="mono" aria-label="Prompt système" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+            <textarea rows={14} className="mono" aria-label={t.settings.prompt} value={prompt} onChange={(e) => setPrompt(e.target.value)} />
             <div className="row end">
               <button
                 type="button"
                 className="btn ghost"
                 onClick={() => {
-                  setPrompt(DEFAULT_SYSTEM_PROMPT)
+                  setPrompt(null)
                   void setSettings({ systemPrompt: null })
-                  toast('Prompt par défaut restauré.')
+                  toast(t.settings.promptRestored)
                 }}
               >
-                Restaurer le prompt par défaut
+                {t.settings.promptRestore}
               </button>
               <button
                 type="button"
                 className="btn primary"
                 disabled={!promptChanged}
                 onClick={() => {
-                  void setSettings({ systemPrompt: prompt === DEFAULT_SYSTEM_PROMPT ? null : prompt })
-                  toast('Prompt enregistré.')
+                  void setSettings({ systemPrompt: prompt === defaultPrompt ? null : prompt })
+                  toast(t.settings.promptSaved)
                 }}
               >
-                Enregistrer
+                {t.common.save}
               </button>
             </div>
           </div>
         </section>
 
         <section className="section" id="relais">
-          <h2>Relais</h2>
+          <h2>{t.settings.relay}</h2>
           <div className="card stack">
             <RelayChooser relaySecret={relaySecret} />
           </div>
         </section>
 
         <section className="section" id="transfert">
-          <h2>Transférer vers un autre appareil</h2>
+          <h2>{t.settings.transfer}</h2>
           <div className="card">
             <TransferPanel />
           </div>
         </section>
 
         <section className="section" id="session">
-          <h2>Compte Monsieur Cuisine</h2>
+          <h2>{t.settings.account}</h2>
           <div className="card stack">
             {settings.mcUser && !settings.sessionExpired ? (
               <p className="notice info">
-                Connecté en tant que <strong>{settings.mcUser}</strong>
-                {settings.mcExpiresAt && ` jusqu’au ${new Date(settings.mcExpiresAt).toLocaleDateString('fr-FR')}`}.
+                {t.settings.connectedAs}
+                <strong>{settings.mcUser}</strong>
+                {settings.mcExpiresAt && t.settings.until(new Date(settings.mcExpiresAt).toLocaleDateString(t.locale))}.
               </p>
             ) : settings.sessionExpired ? (
-              <p className="notice error">Session expirée : recollez une nouvelle session ci-dessous.</p>
+              <p className="notice error">{t.settings.expired}</p>
             ) : (
-              <p className="notice warn">Aucun compte connecté.</p>
+              <p className="notice warn">{t.settings.noAccount}</p>
             )}
-            {hasRelay(settings) ? <SessionImport /> : <p className="muted">Configurez d’abord le relais.</p>}
+            {hasRelay(settings) ? <SessionImport /> : <p className="muted">{t.settings.relayFirst}</p>}
           </div>
         </section>
 
         <section className="section" id="deconnexion">
-          <h2>Déconnexion</h2>
+          <h2>{t.settings.logout}</h2>
           <div className="card stack">
-            <p className="muted small">Efface la session, les clés, toutes les recettes de cet appareil et le cache de l’application.</p>
+            <p className="muted small">{t.settings.logoutIntro}</p>
             <button type="button" className="btn danger" onClick={() => void countUnpublished().then(setLogout)}>
-              <Icon name="logout" /> Se déconnecter
+              <Icon name="logout" /> {t.settings.logoutButton}
             </button>
           </div>
         </section>
@@ -186,14 +198,14 @@ export function Settings() {
       <Dialog
         open={!!logout}
         onClose={() => !wiping && setLogout(null)}
-        title="Se déconnecter et tout effacer ?"
+        title={t.settings.logoutTitle}
         actions={
           <>
             <button type="button" className="btn ghost" disabled={wiping} onClick={() => setLogout(null)}>
-              Annuler
+              {t.common.cancel}
             </button>
             <button type="button" className="btn danger" disabled={wiping} onClick={() => void doLogout()}>
-              {wiping ? 'Effacement…' : 'Tout effacer'}
+              {wiping ? t.settings.wiping : t.settings.wipe}
             </button>
           </>
         }
@@ -201,23 +213,19 @@ export function Settings() {
         {logout && logout.count > 0 ? (
           <>
             <p className="notice error">
-              <strong>
-                {logout.count} recette{logout.count > 1 ? 's' : ''} non publiée{logout.count > 1 ? 's' : ''} (ou modifiée
-                {logout.count > 1 ? 's' : ''} depuis la publication) sera{logout.count > 1 ? 'ont' : ''} définitivement perdue
-                {logout.count > 1 ? 's' : ''} :
-              </strong>
+              <strong>{t.settings.lost(logout.count)}</strong>
             </p>
             <ul>
-              {logout.titles.slice(0, 8).map((t, i) => (
-                <li key={i}>{t}</li>
+              {logout.titles.slice(0, 8).map((title, i) => (
+                <li key={i}>{title}</li>
               ))}
-              {logout.titles.length > 8 && <li>… et {logout.titles.length - 8} autre(s)</li>}
+              {logout.titles.length > 8 && <li>{t.settings.others(logout.titles.length - 8)}</li>}
             </ul>
           </>
         ) : (
-          <p>Toutes vos recettes sont publiées. Elles pourront être réimportées depuis Monsieur Cuisine.</p>
+          <p>{t.settings.allPublished}</p>
         )}
-        <p className="muted small">Vos clés IA et la configuration du relais seront aussi effacées.</p>
+        <p className="muted small">{t.settings.alsoWiped}</p>
       </Dialog>
     </>
   )

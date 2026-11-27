@@ -7,8 +7,10 @@ import '@fontsource/ibm-plex-mono/400.css'
 import './styles/tokens.css'
 import './styles/app.css'
 import { App } from './App'
+import { captureInstallPrompt } from './lib/install'
 
 if (navigator.storage?.persist) void navigator.storage.persist()
+captureInstallPrompt()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

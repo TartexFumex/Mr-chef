@@ -6,19 +6,21 @@ import { generateSecret, normalizeRelayUrl } from '../lib/relay'
 import { setSettings } from '../lib/settings'
 import { deleteSecret, setSecret } from '../lib/vault'
 import { toast } from './toast'
+import { useT } from '../i18n'
 
 /** Adresse et secret du relais personnel, avec test de connexion. */
 export function RelayForm({
   initialUrl,
   initialSecret,
   onSaved,
-  submitLabel = 'Enregistrer',
+  submitLabel,
 }: {
   initialUrl: string
   initialSecret: string
   onSaved?: () => void
   submitLabel?: string
 }) {
+  const t = useT()
   const [url, setUrl] = useState(initialUrl)
   const [secret, setSecretValue] = useState(initialSecret)
   const [status, setStatus] = useState<{ kind: 'info' | 'error'; text: string } | null>(null)
@@ -27,13 +29,13 @@ export function RelayForm({
   async function test(): Promise<boolean> {
     const relayUrl = normalizeRelayUrl(url)
     if (!relayUrl) {
-      setStatus({ kind: 'error', text: 'Renseignez l’adresse du relais.' })
+      setStatus({ kind: 'error', text: t.relay.needUrl })
       return false
     }
     setBusy(true)
     try {
       const h = await new McClient({ url: relayUrl, secret: secret.trim() }, async () => null).health()
-      setStatus({ kind: 'info', text: `Relais joignable (version ${h.version}${h.public ? ', public' : ''}).` })
+      setStatus({ kind: 'info', text: t.relay.reachable(h.version, !!h.public) })
       return true
     } catch (e) {
       setStatus({ kind: 'error', text: errorMessage(e) })
@@ -49,30 +51,29 @@ export function RelayForm({
     await setSettings({ relayUrl: normalizeRelayUrl(url), relayMode: 'custom' })
     if (secret.trim()) await setSecret('relay:secret', secret.trim())
     else await deleteSecret('relay:secret')
-    toast('Relais enregistré.')
+    toast(t.relay.saved)
     onSaved?.()
   }
 
   return (
     <form className="stack" onSubmit={save}>
       <p className="muted small">
-        Votre propre relais Cloudflare, qui transmet les demandes à Monsieur Cuisine.{' '}
-        <Link to="/aide#relais">Guide de mise en place</Link>
+        {t.relay.formIntro} <Link to="/aide#relais">{t.relay.guide}</Link>
       </p>
       <label className="field">
-        <span>Adresse du relais</span>
+        <span>{t.relay.url}</span>
         <input
           type="url"
           inputMode="url"
           autoComplete="off"
-          placeholder="https://mr-chef-relay.votre-compte.workers.dev"
+          placeholder={t.relay.placeholder}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
       </label>
       <label className="field">
         <span>
-          Secret du relais <span className="hint">(relais privé seulement, identique à RELAY_SHARED_SECRET)</span>
+          {t.relay.secret} <span className="hint">{t.relay.secretHint}</span>
         </span>
         <input
           type="password"
@@ -90,18 +91,18 @@ export function RelayForm({
             const s = generateSecret()
             setSecretValue(s)
             void navigator.clipboard?.writeText(s).then(
-              () => toast('Secret généré et copié. Collez-le dans RELAY_SHARED_SECRET.'),
-              () => toast('Secret généré.'),
+              () => toast(t.relay.secretCopied),
+              () => toast(t.relay.secretGenerated),
             )
           }}
         >
-          Générer un secret
+          {t.relay.generate}
         </button>
         <button type="button" className="btn" disabled={busy} onClick={() => void test()}>
-          Tester le relais
+          {t.relay.test}
         </button>
         <button type="submit" className="btn primary" disabled={busy}>
-          {submitLabel}
+          {submitLabel ?? t.common.save}
         </button>
       </div>
       {status && (

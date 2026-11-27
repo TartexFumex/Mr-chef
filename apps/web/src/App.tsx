@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router'
 import { Banners } from './components/Banners'
 import { Toasts } from './components/toast'
+import { setCurrentLang, useLang } from './i18n'
 import { useSettings } from './lib/settings'
 import { processPendingQueue } from './lib/sync'
 import { Editor } from './pages/Editor'
@@ -30,8 +31,19 @@ function usePendingQueue() {
   }, [])
 }
 
+/** Applique la langue choisie (ou celle du navigateur) à tout le document. */
+function useDocumentLang() {
+  const lang = useLang()
+  // Avant le rendu des enfants : les formats hors React (durées, erreurs) lisent la langue active.
+  setCurrentLang(lang)
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
+}
+
 export function App() {
   usePendingQueue()
+  useDocumentLang()
   return (
     <HashRouter>
       <div className="app">

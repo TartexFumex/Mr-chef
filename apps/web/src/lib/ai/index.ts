@@ -3,9 +3,10 @@ import {
   aiToRecipe,
   buildAiJsonSchema,
   buildUserPrompt,
-  DEFAULT_SYSTEM_PROMPT,
+  defaultSystemPrompt,
   getRobot,
   renderSystemPrompt,
+  type Locale,
   type Fix,
   type Recipe,
 } from '@mr-chef/recipe-schema'
@@ -37,22 +38,23 @@ export interface GenerationResult {
 export async function generateRecipe(
   wish: string,
   servings: number,
-  opts: { provider?: ProviderId; signal?: AbortSignal } = {},
+  opts: { provider?: ProviderId; signal?: AbortSignal; lang?: Locale } = {},
 ): Promise<GenerationResult> {
   const settings = await getSettings()
+  const lang = opts.lang ?? 'fr'
   const providerId = opts.provider ?? settings.activeProvider
-  if (!providerId) throw new AiError('bad_key', 'IA', 'aucun fournisseur configuré')
+  if (!providerId) throw new AiError('bad_key', 'AI')
   const provider = PROVIDERS[providerId]
   const apiKey = await getSecret(`ai:${providerId}`)
-  if (!apiKey) throw new AiError('bad_key', provider.label, 'clé absente')
+  if (!apiKey) throw new AiError('bad_key', provider.label)
   const model = settings.models[providerId] ?? provider.defaultModels[0]!.id
   const robot = getRobot(settings.robotId)
 
   const raw = await provider.generate({
     apiKey,
     model,
-    system: renderSystemPrompt(settings.systemPrompt ?? DEFAULT_SYSTEM_PROMPT, robot),
-    user: buildUserPrompt(wish, servings),
+    system: renderSystemPrompt(settings.systemPrompt ?? defaultSystemPrompt(lang), robot, lang),
+    user: buildUserPrompt(wish, servings, lang),
     schema: buildAiJsonSchema(robot),
     signal: opts.signal,
   })

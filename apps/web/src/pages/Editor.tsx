@@ -32,17 +32,19 @@ import { deleteRecipeLocal, prepareImage, releaseImageUrl, saveRecipe, storeImag
 import { publishRecipe, resolveConflict, unpublishRecipe } from '../lib/sync'
 import { useSettings } from '../lib/settings'
 import { db } from '../db/db'
+import { categoryLabel, describeFix, unitLabel, useLang, useT } from '../i18n'
 
 export function Editor() {
   const { id } = useParams()
   const rec = useRecipe(id)
+  const t = useT()
   if (rec === undefined) return null
   if (rec === null) {
     return (
       <>
-        <TopBar title="Recette introuvable" back="/recettes" />
+        <TopBar title={t.editor.notFound} back="/recettes" />
         <main className="main">
-          <p>Cette recette n’existe plus sur cet appareil.</p>
+          <p>{t.editor.notFoundText}</p>
         </main>
       </>
     )
@@ -57,6 +59,8 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
   const navigate = useNavigate()
   const settings = useSettings()
   const online = useOnline()
+  const t = useT()
+  const lang = useLang()
   const [draft, setDraft] = useState<Recipe>(rec.recipe)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSaved = useRef(JSON.stringify(rec.recipe))
@@ -119,9 +123,9 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
       if (kind === 'publish') await publishRecipe(rec.id)
       else await unpublishRecipe(rec.id)
       const fresh = await db.recipes.get(rec.id)
-      if (fresh?.pending) toast('Hors ligne : l’opération partira au retour du réseau.')
+      if (fresh?.pending) toast(t.editor.queued)
       else if (fresh?.sync.error) toastError(fresh.sync.error)
-      else toast(kind === 'publish' ? 'Recette envoyée sur Monsieur Cuisine.' : 'Recette retirée de Monsieur Cuisine.')
+      else toast(kind === 'publish' ? t.editor.published : t.editor.unpublished)
     } catch (e) {
       toastError(errorMessage(e))
     } finally {
@@ -152,22 +156,21 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
 
   return (
     <>
-      <TopBar title={draft.title || 'Sans titre'} back="/recettes">
+      <TopBar title={draft.title || t.editor.untitled} back="/recettes">
         <StatusBadge rec={rec} />
       </TopBar>
       <main className="main">
         {rec.sync.conflict && (
           <div className="notice warn stack" role="alert">
             <p>
-              <strong>Conflit :</strong> la recette a été modifiée sur Monsieur Cuisine et ici depuis la dernière
-              synchronisation.
+              <strong>{t.editor.conflictTitle}</strong> {t.editor.conflictText}
             </p>
             <div className="row">
               <button type="button" className="btn" onClick={() => void resolveConflict(rec.id, 'remote')}>
-                Prendre la version en ligne
+                {t.editor.takeRemote}
               </button>
               <button type="button" className="btn primary" onClick={() => void resolveConflict(rec.id, 'local')}>
-                Garder ma version et la publier
+                {t.editor.keepLocal}
               </button>
             </div>
           </div>
@@ -175,29 +178,26 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
         {initialFixes.length > 0 && (
           <details className="notice info">
             <summary>
-              {initialFixes.length} ajustement{initialFixes.length > 1 ? 's' : ''} pour le {robot.name}
+              {t.editor.adjustments(initialFixes.length, robot.name)}
             </summary>
             <ul className="fixes small">
               {initialFixes.map((f, i) => (
-                <li key={i}>
-                  {f.stepIndex !== undefined && `Étape ${f.stepIndex + 1} : `}
-                  {f.message}
-                </li>
+                <li key={i}>{describeFix(f, t, robot.name, lang)}</li>
               ))}
             </ul>
           </details>
         )}
 
         <div className="photo" style={{ marginTop: 12 }}>
-          {imageUrl ? <img src={imageUrl} alt="" /> : <span className="muted">Aucune photo</span>}
+          {imageUrl ? <img src={imageUrl} alt="" /> : <span className="muted">{t.editor.noPhoto}</span>}
           <div className="row">
             <label className="btn">
-              <Icon name="camera" /> {imageUrl ? 'Changer' : 'Ajouter une photo'}
+              <Icon name="camera" /> {imageUrl ? t.editor.changePhoto : t.editor.addPhoto}
               <input type="file" accept="image/*" hidden onChange={(e) => void onPhoto(e.target.files?.[0])} />
             </label>
             {imageUrl && (
               <button type="button" className="btn" onClick={() => void saveRecipe(rec.id, { imageId: null })}>
-                Retirer
+                {t.editor.removePhoto}
               </button>
             )}
           </div>
@@ -205,26 +205,26 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
 
         <section className="section stack">
           <label className="field">
-            <span>Titre</span>
+            <span>{t.editor.title}</span>
             <input type="text" value={draft.title} onChange={(e) => patch({ title: e.target.value })} />
           </label>
           <label className="field">
-            <span>Description</span>
+            <span>{t.editor.description}</span>
             <textarea rows={3} value={draft.description} onChange={(e) => patch({ description: e.target.value })} />
           </label>
           <div className="grid4">
             <label className="field">
-              <span>Difficulté</span>
+              <span>{t.editor.complexity}</span>
               <select value={draft.complexity} onChange={(e) => patch({ complexity: e.target.value as Recipe['complexity'] })}>
                 {COMPLEXITIES.map((c) => (
                   <option key={c.key} value={c.key}>
-                    {c.label}
+                    {t.complexity[c.key] ?? c.label}
                   </option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span>Préparation (min)</span>
+              <span>{t.editor.prep}</span>
               <input
                 type="number"
                 min={0}
@@ -233,7 +233,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
               />
             </label>
             <label className="field">
-              <span>Prêt en (min)</span>
+              <span>{t.editor.ready}</span>
               <input
                 type="number"
                 min={0}
@@ -242,7 +242,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
               />
             </label>
             <label className="field">
-              <span>Robot</span>
+              <span>{t.editor.robot}</span>
               <select
                 value={rec.robotId}
                 onChange={async (e) => {
@@ -260,7 +260,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
           </div>
           <div className="grid2">
             <label className="field">
-              <span>Portions</span>
+              <span>{t.editor.servings}</span>
               <input
                 type="number"
                 min={1}
@@ -269,20 +269,22 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
               />
             </label>
             <label className="field">
-              <span>Unité</span>
+              <span>{t.editor.unit}</span>
               <select
                 value={draft.servings.unit}
                 onChange={(e) => patch({ servings: { ...draft.servings, unit: e.target.value as Recipe['servings']['unit'] } })}
               >
                 {SERVING_UNITS.map((u) => (
-                  <option key={u}>{u}</option>
+                  <option key={u} value={u}>
+                    {unitLabel(u, t)}
+                  </option>
                 ))}
               </select>
             </label>
           </div>
           <div>
-            <span style={{ fontWeight: 600 }}>Catégories</span>
-            <div className="chips" role="group" aria-label="Catégories" style={{ marginTop: 6 }}>
+            <span style={{ fontWeight: 600 }}>{t.editor.categories}</span>
+            <div className="chips" role="group" aria-label={t.editor.categories} style={{ marginTop: 6 }}>
               {CATEGORIES.map((c) => {
                 const on = draft.categoryIds.includes(c.id)
                 return (
@@ -295,7 +297,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                       patch({ categoryIds: on ? draft.categoryIds.filter((x) => x !== c.id) : [...draft.categoryIds, c.id] })
                     }
                   >
-                    {c.label}
+                    {categoryLabel(c.id, c.label, t)}
                   </button>
                 )
               })}
@@ -304,7 +306,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
         </section>
 
         <section className="section">
-          <h2>Ingrédients</h2>
+          <h2>{t.editor.ingredients}</h2>
           <div className="stack">
             {draft.ingredientGroups.map((g, gi) => (
               <div key={g.key} className="card stack">
@@ -312,7 +314,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                   <input
                     type="text"
                     className="grow"
-                    aria-label="Nom du groupe"
+                    aria-label={t.editor.groupName}
                     value={g.name}
                     onChange={(e) => setGroup(gi, { ...g, name: e.target.value })}
                     style={{ flex: 1, fontWeight: 600 }}
@@ -321,7 +323,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                     <button
                       type="button"
                       className="icon-btn"
-                      aria-label={`Supprimer le groupe ${g.name}`}
+                      aria-label={t.editor.deleteGroup(g.name)}
                       onClick={() => patch({ ingredientGroups: draft.ingredientGroups.filter((_, i) => i !== gi) })}
                     >
                       <Icon name="trash" />
@@ -336,24 +338,26 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                         type="text"
                         inputMode="decimal"
                         className="ing-amount"
-                        aria-label="Quantité"
+                        aria-label={t.editor.amount}
                         value={ing.amount}
                         onChange={(e) => setIngredient(gi, ii, { amount: e.target.value })}
                       />
                       <select
                         className="ing-unit"
-                        aria-label="Unité"
+                        aria-label={t.editor.unit}
                         value={ing.unit}
                         onChange={(e) => setIngredient(gi, ii, { unit: e.target.value as Ingredient['unit'] })}
                       >
                         {INGREDIENT_UNITS.map((u) => (
-                          <option key={u}>{u}</option>
+                          <option key={u} value={u}>
+                            {unitLabel(u, t)}
+                          </option>
                         ))}
                       </select>
                       <input
                         type="text"
                         className="ing-name"
-                        aria-label="Ingrédient"
+                        aria-label={t.editor.ingredient}
                         value={ing.name}
                         onChange={(e) => setIngredient(gi, ii, { name: e.target.value })}
                       />
@@ -361,7 +365,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                         type="button"
                         className="icon-btn"
                         style={{ width: 36, height: 36 }}
-                        aria-label={`Retirer ${ing.name}`}
+                        aria-label={t.editor.removeIngredient(ing.name)}
                         onClick={() => setGroup(gi, { ...g, ingredients: g.ingredients.filter((_, i) => i !== ii) })}
                       >
                         <Icon name="close" />
@@ -376,7 +380,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                     setGroup(gi, { ...g, ingredients: [...g.ingredients, { key: newKey('i'), name: '', amount: '', unit: 'g' }] })
                   }
                 >
-                  <Icon name="plus" /> Ajouter un ingrédient
+                  <Icon name="plus" /> {t.editor.addIngredient}
                 </button>
               </div>
             ))}
@@ -384,25 +388,22 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
               type="button"
               className="btn"
               onClick={() =>
-                patch({ ingredientGroups: [...draft.ingredientGroups, { key: newKey('g'), name: 'Nouveau groupe', ingredients: [] }] })
+                patch({ ingredientGroups: [...draft.ingredientGroups, { key: newKey('g'), name: t.editor.newGroup, ingredients: [] }] })
               }
             >
-              <Icon name="plus" /> Ajouter un groupe
+              <Icon name="plus" /> {t.editor.addGroup}
             </button>
           </div>
         </section>
 
         <section className="section">
-          <h2>Étapes</h2>
+          <h2>{t.editor.steps}</h2>
           {liveFixes.length > 0 && (
             <div className="notice warn small" style={{ marginBottom: 12 }}>
-              À la publication, Mr Chef ajustera ces réglages pour le {robot.name} :
+              {t.editor.willAdjust(robot.name)}
               <ul className="fixes">
                 {liveFixes.map((f, i) => (
-                  <li key={i}>
-                    {f.stepIndex !== undefined && `Étape ${f.stepIndex + 1} : `}
-                    {f.message}
-                  </li>
+                  <li key={i}>{describeFix(f, t, robot.name, lang)}</li>
                 ))}
               </ul>
             </div>
@@ -416,7 +417,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                   <input
                     type="text"
                     className="grow"
-                    aria-label={`Titre de l’étape ${si + 1}`}
+                    aria-label={t.editor.stepTitle(si + 1)}
                     value={step.title}
                     onChange={(e) => setStep(si, { title: e.target.value })}
                     style={{ flex: 1 }}
@@ -424,7 +425,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                   <button
                     type="button"
                     className="icon-btn"
-                    aria-label={`Supprimer l’étape ${si + 1}`}
+                    aria-label={t.editor.deleteStep(si + 1)}
                     onClick={() => patch({ steps: draft.steps.filter((_, i) => i !== si) })}
                   >
                     <Icon name="trash" />
@@ -432,7 +433,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                 </div>
                 <textarea
                   rows={3}
-                  aria-label={`Instructions de l’étape ${si + 1}`}
+                  aria-label={t.editor.stepText(si + 1)}
                   value={step.description}
                   onChange={(e) => setStep(si, { description: e.target.value })}
                   style={{ marginTop: 8 }}
@@ -442,7 +443,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                   className={`mode-pill${step.mode ? '' : ' empty'}`}
                   onClick={() => setModeStep(step.key)}
                 >
-                  {step.mode ? modeSummary(step.mode) : '+ Programme du robot'}
+                  {step.mode ? modeSummary(step.mode) : t.editor.addProgram}
                 </button>
               </div>
             )}
@@ -451,22 +452,22 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
             type="button"
             className="btn block"
             onClick={() =>
-              patch({ steps: [...draft.steps, { key: newKey('s'), title: `Étape ${draft.steps.length + 1}`, description: '', mode: null }] })
+              patch({ steps: [...draft.steps, { key: newKey('s'), title: t.editor.stepN(draft.steps.length + 1), description: '', mode: null }] })
             }
           >
-            <Icon name="plus" /> Ajouter une étape
+            <Icon name="plus" /> {t.editor.addStep}
           </button>
         </section>
 
         <section className="section stack">
-          <h2>Astuces</h2>
-          <textarea rows={3} aria-label="Astuces" value={draft.hintsAndTips} onChange={(e) => patch({ hintsAndTips: e.target.value })} />
-          <h2>Valeurs nutritionnelles (par portion)</h2>
+          <h2>{t.editor.tips}</h2>
+          <textarea rows={3} aria-label={t.editor.tips} value={draft.hintsAndTips} onChange={(e) => patch({ hintsAndTips: e.target.value })} />
+          <h2>{t.editor.nutrition}</h2>
           <div className="grid4">
             {NUTRIENTS.map((n) => (
               <label key={n.key} className="field">
                 <span>
-                  {n.label} ({n.unit})
+                  {t.nutrients[n.key] ?? n.label} ({n.unit})
                 </span>
                 <input
                   type="number"
@@ -479,11 +480,11 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
           </div>
           {rec.origin.prompt && (
             <p className="muted small">
-              Générée par {rec.origin.model} à partir de : « {rec.origin.prompt} »
+              {t.editor.generatedBy(rec.origin.model ?? '', rec.origin.prompt)}
             </p>
           )}
           <button type="button" className="btn ghost" onClick={() => setConfirm('delete')}>
-            <Icon name="trash" /> Supprimer de cet appareil
+            <Icon name="trash" /> {t.editor.deleteLocal}
           </button>
         </section>
       </main>
@@ -493,24 +494,24 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
           {rec.sync.error ? (
             <span style={{ color: 'var(--tomate)' }}>{rec.sync.error}</span>
           ) : rec.sync.lastSyncedAt ? (
-            `Synchronisée ${relativeTime(rec.sync.lastSyncedAt)}`
+            t.editor.syncedAgo(relativeTime(rec.sync.lastSyncedAt))
           ) : (
-            'Enregistrée sur cet appareil'
+            t.editor.savedLocal
           )}
         </div>
         {state === 'local' && (
           <button type="button" className="btn primary" disabled={!!busy || !hasRelay(settings)} onClick={() => void run('publish')}>
-            <Icon name="upload" /> {busy === 'publish' ? 'Publication…' : online ? 'Publier sur Monsieur Cuisine' : 'Publier au retour du réseau'}
+            <Icon name="upload" /> {busy === 'publish' ? t.editor.publishing : online ? t.editor.publish : t.editor.publishOffline}
           </button>
         )}
         {state === 'desynced' && (
           <button type="button" className="btn primary" disabled={!!busy} onClick={() => void run('publish')}>
-            <Icon name="refresh" /> {busy === 'publish' ? 'Mise à jour…' : 'Mettre à jour en ligne'}
+            <Icon name="refresh" /> {busy === 'publish' ? t.editor.updating : t.editor.update}
           </button>
         )}
         {state !== 'local' && (
           <button type="button" className="btn" disabled={!!busy} onClick={() => setConfirm('unpublish')}>
-            {busy === 'unpublish' ? 'Retrait…' : 'Dépublier'}
+            {busy === 'unpublish' ? t.editor.unpublishing : t.editor.unpublish}
           </button>
         )}
       </div>
@@ -535,11 +536,11 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
       <Dialog
         open={confirm === 'unpublish'}
         onClose={() => setConfirm(null)}
-        title="Dépublier cette recette ?"
+        title={t.editor.unpublishTitle}
         actions={
           <>
             <button type="button" className="btn ghost" onClick={() => setConfirm(null)}>
-              Annuler
+              {t.common.cancel}
             </button>
             <button
               type="button"
@@ -549,22 +550,22 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                 void run('unpublish')
               }}
             >
-              Dépublier
+              {t.editor.unpublish}
             </button>
           </>
         }
       >
-        <p>Elle sera retirée de votre compte Monsieur Cuisine (corbeille) et restera ici, en recette locale.</p>
+        <p>{t.editor.unpublishText}</p>
       </Dialog>
 
       <Dialog
         open={confirm === 'delete'}
         onClose={() => setConfirm(null)}
-        title="Supprimer cette recette ?"
+        title={t.editor.deleteTitle}
         actions={
           <>
             <button type="button" className="btn ghost" onClick={() => setConfirm(null)}>
-              Annuler
+              {t.common.cancel}
             </button>
             <button
               type="button"
@@ -576,14 +577,14 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                 navigate('/recettes', { replace: true })
               }}
             >
-              Supprimer
+              {t.common.delete}
             </button>
           </>
         }
       >
         <p>
-          Elle sera effacée de cet appareil.
-          {state !== 'local' && ' La version publiée reste sur votre compte Monsieur Cuisine ; dépubliez-la d’abord pour la retirer.'}
+          {t.editor.deleteText}
+          {state !== 'local' && t.editor.deleteRemote}
         </p>
       </Dialog>
     </>
