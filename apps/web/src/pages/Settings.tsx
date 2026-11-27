@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { DEFAULT_SYSTEM_PROMPT, getRobot } from '@mr-chef/recipe-schema'
 import { AiKeyEditor } from '../components/AiKeyEditor'
 import { Dialog } from '../components/Dialog'
@@ -8,10 +8,10 @@ import { RelayForm } from '../components/RelayForm'
 import { RobotPicker } from '../components/RobotPicker'
 import { SessionImport } from '../components/SessionImport'
 import { toast } from '../components/toast'
+import { TransferPanel } from '../components/TransferPanel'
 import { TopBar } from '../components/TopBar'
 import type { ProviderId } from '../db/db'
 import { PROVIDER_ORDER, PROVIDERS } from '../lib/ai'
-import { configLink } from '../lib/relay'
 import { countUnpublished, logoutAndWipe } from '../lib/reset'
 import { setSettings, useSettings } from '../lib/settings'
 import { getSecret, useStoredSecretIds } from '../lib/vault'
@@ -49,7 +49,11 @@ export function Settings() {
 
   return (
     <>
-      <TopBar title="Paramètres" />
+      <TopBar title="Paramètres">
+        <Link to="/aide" className="icon-btn" aria-label="Aide">
+          <Icon name="help" />
+        </Link>
+      </TopBar>
       <main className="main">
         <section className="section" id="ia">
           <h2>
@@ -140,19 +144,13 @@ export function Settings() {
           <h2>Relais</h2>
           <div className="card stack">
             <RelayForm initialUrl={settings.relayUrl} initialSecret={relaySecret} onSaved={() => void getSecret('relay:secret').then((s) => setRelaySecret(s ?? ''))} />
-            {settings.relayUrl && relaySecret && (
-              <button
-                type="button"
-                className="btn ghost"
-                onClick={() =>
-                  void navigator.clipboard
-                    ?.writeText(configLink(settings.relayUrl, relaySecret))
-                    .then(() => toast('Lien copié. Ouvrez-le sur votre téléphone pour préremplir le relais.'))
-                }
-              >
-                <Icon name="copy" /> Copier le lien de configuration
-              </button>
-            )}
+          </div>
+        </section>
+
+        <section className="section" id="transfert">
+          <h2>Transférer vers un autre appareil</h2>
+          <div className="card">
+            <TransferPanel />
           </div>
         </section>
 

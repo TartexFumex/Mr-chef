@@ -11,13 +11,3 @@ export function normalizeRelayUrl(input: string): string {
   if (!t) return ''
   return /^https?:\/\//i.test(t) ? t : `https://${t}`
 }
-
-/**
- * Lien qui préremplit le relais sur un autre appareil. Le secret est placé dans le
- * fragment (#), qui n'est jamais envoyé au serveur GitHub Pages.
- */
-export function configLink(relayUrl: string, secret: string): string {
-  const base = `${location.origin}${location.pathname}`
-  const q = new URLSearchParams({ relay: relayUrl, secret })
-  return `${base}#/onboarding?${q.toString()}`
-}
