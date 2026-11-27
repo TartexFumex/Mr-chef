@@ -1,0 +1,36 @@
+name: Déployer le relais
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Vérifier la configuration
+        run: |
+          test -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" || { echo "Secret CLOUDFLARE_API_TOKEN manquant"; exit 1; }
+          test -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" || { echo "Secret CLOUDFLARE_ACCOUNT_ID manquant"; exit 1; }
+          test -n "${{ secrets.RELAY_SHARED_SECRET }}" || { echo "Secret RELAY_SHARED_SECRET manquant"; exit 1; }
+          test -n "${{ vars.RELAY_ALLOWED_ORIGIN }}" || { echo "Variable RELAY_ALLOWED_ORIGIN manquante"; exit 1; }
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/relay
+          packageManager: pnpm
+          command: deploy --var ALLOWED_ORIGIN:${{ vars.RELAY_ALLOWED_ORIGIN }}
+          secrets: |
+            RELAY_SHARED_SECRET
+        env:
+          RELAY_SHARED_SECRET: ${{ secrets.RELAY_SHARED_SECRET }}
