@@ -20,7 +20,7 @@ const recipe: Recipe = {
 
 describe('toMcPayload', () => {
   it('reproduit le corps de création observé dans le HAR', () => {
-    const p = toMcPayload(recipe, getRobot('connect'), 'draft', { landscapeMediaId: 10708093 })
+    const p = toMcPayload(recipe, getRobot('connect'), 'draft', { detailsMediaId: 10708092, thumbnailMediaId: 10708093 })
     expect(p).toMatchObject({
       status: 'draft',
       source: 'member',
@@ -30,6 +30,7 @@ describe('toMcPayload', () => {
       categoryIds: [259],
       allowSocialSharing: false,
       thumbnail: { portraitMediaId: null, landscapeMediaId: 10708093, portraitIsAiGenerated: false, landscapeIsAiGenerated: false },
+      detailsImage: { portraitMediaId: null, landscapeMediaId: 10708092, portraitIsAiGenerated: false, landscapeIsAiGenerated: false },
     })
     expect(p.nutrients).toEqual([
       { name: 'calories', unit: 'kCal', amount: 2 },

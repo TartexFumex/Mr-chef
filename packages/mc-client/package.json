@@ -1,0 +1,9 @@
+{
+  "name": "@mr-chef/mc-client",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./endpoints": "./src/endpoints.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": { "@mr-chef/recipe-schema": "workspace:*" }
+}

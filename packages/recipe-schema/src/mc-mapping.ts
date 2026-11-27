@@ -4,7 +4,8 @@ import type { RobotProfile } from './robots'
 import type { McDeviceSetting, McRecipeRecord, McRecipeStatus, McRecipeWritePayload, McStep } from './mc-types'
 
 export interface MediaIds {
-  landscapeMediaId: number | null
+  detailsMediaId: number | null
+  thumbnailMediaId: number | null
 }
 
 function mediaRef(id: number | null) {
@@ -29,7 +30,7 @@ export function toMcPayload(
   recipe: Recipe,
   robot: RobotProfile,
   status: McRecipeStatus,
-  media: MediaIds = { landscapeMediaId: null },
+  media: MediaIds = { detailsMediaId: null, thumbnailMediaId: null },
 ): McRecipeWritePayload {
   return {
     status,
@@ -39,8 +40,8 @@ export function toMcPayload(
     title: recipe.title,
     description: recipe.description,
     hintsAndTips: recipe.hintsAndTips,
-    thumbnail: mediaRef(media.landscapeMediaId),
-    detailsImage: mediaRef(media.landscapeMediaId),
+    thumbnail: mediaRef(media.thumbnailMediaId),
+    detailsImage: mediaRef(media.detailsMediaId),
     complexityId: complexityId(recipe.complexity),
     allowSocialSharing: false,
     categoryIds: recipe.categoryIds,
