@@ -1,7 +1,6 @@
 import { chatCompletionJson, listModelsFrom } from './openai-compatible'
 import { AiError, type RecipeProvider } from './types'
-import { getSettings } from '../settings'
-import { getSecret } from '../vault'
+import { relayConfig } from '../mc'
 
 const API = 'https://api.mistral.ai/v1/chat/completions'
 
@@ -42,12 +41,11 @@ export const mistralProvider: RecipeProvider = {
       return await chatCompletionJson(API, { authorization: `Bearer ${apiKey}` }, 'Mistral', req)
     } catch (e) {
       if (!(e instanceof AiError) || e.kind !== 'network') throw e
-      const settings = await getSettings()
-      const secret = await getSecret('relay:secret')
-      if (!settings.relayUrl || !secret) throw e
+      const relay = await relayConfig()
+      if (!relay) throw e
       return chatCompletionJson(
-        `${settings.relayUrl.replace(/\/+$/, '')}/ai/mistral`,
-        { 'x-ai-key': apiKey, 'x-relay-secret': secret },
+        `${relay.url.replace(/\/+$/, '')}/ai/mistral`,
+        { 'x-ai-key': apiKey, ...(relay.secret ? { 'x-relay-secret': relay.secret } : {}) },
         'Mistral',
         req,
       )

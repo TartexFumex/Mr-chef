@@ -1,18 +1,34 @@
 /**
- * Relais personnel Mr Chef (Cloudflare Worker).
+ * Relais Mr Chef (Cloudflare Worker).
  *
  * Transmet à www.monsieur-cuisine.com les appels que le navigateur ne peut pas faire
  * lui-même (CORS fermé, en-tête Cookie interdit). Sans état et sans journal :
  * rien n'est conservé entre deux requêtes.
+ *
+ * Deux modes :
+ * - public (RELAY_PUBLIC = "true", ou aucun RELAY_SHARED_SECRET) : ouvert à tout visiteur du site autorisé.
+ *   Chaque appel Monsieur Cuisine reste authentifié par le cookie de l'utilisateur ;
+ *   le relais n'ajoute aucun droit. Protections : origine stricte, liste blanche des
+ *   opérations, limite de requêtes par adresse IP.
+ * - privé (RELAY_PUBLIC = "false" et RELAY_SHARED_SECRET défini) : réservé à qui connaît le secret.
  */
 import { isAllowedOperation, isAllowedUploadUrl } from '@mr-chef/mc-client/endpoints'
 
-export interface Env {
-  ALLOWED_ORIGIN: string
-  RELAY_SHARED_SECRET: string
+/** Liaison « rate limiting » de Cloudflare Workers (voir wrangler.toml). */
+export interface RateLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>
 }
 
-const VERSION = '0.1.0'
+export interface Env {
+  ALLOWED_ORIGIN: string
+  /** "true" : relais public, le secret est ignoré. */
+  RELAY_PUBLIC?: string
+  /** Absent ou vide : relais public. */
+  RELAY_SHARED_SECRET?: string
+  RATE_LIMITER?: RateLimiter
+}
+
+const VERSION = '0.2.0'
 const MC = 'https://www.monsieur-cuisine.com'
 const MISTRAL = 'https://api.mistral.ai/v1/chat/completions'
 
@@ -96,11 +112,24 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   }
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) })
 
+  const secret = env.RELAY_PUBLIC === 'true' ? '' : (env.RELAY_SHARED_SECRET?.trim() ?? '')
+
   if (url.pathname === '/health' && request.method === 'GET') {
-    return json({ ok: true, version: VERSION }, 200, origin)
+    return json({ ok: true, version: VERSION, public: !secret }, 200, origin)
   }
 
-  if (!env.RELAY_SHARED_SECRET || !safeEqual(request.headers.get('x-relay-secret') ?? '', env.RELAY_SHARED_SECRET)) {
+  // Limite par adresse IP, avant tout appel sortant (l'en-tête Origin peut être imité hors navigateur).
+  if (env.RATE_LIMITER) {
+    const ip = request.headers.get('cf-connecting-ip') ?? 'inconnue'
+    const { success } = await env.RATE_LIMITER.limit({ key: ip })
+    if (!success) {
+      const r = json({ error: 'rate_limited' }, 429, origin)
+      r.headers.set('retry-after', '60')
+      return r
+    }
+  }
+
+  if (secret && !safeEqual(request.headers.get('x-relay-secret') ?? '', secret)) {
     return json({ error: 'bad_secret' }, 401, origin)
   }
 

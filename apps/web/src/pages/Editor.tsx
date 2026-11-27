@@ -27,7 +27,7 @@ import { toast, toastError } from '../components/toast'
 import { TopBar } from '../components/TopBar'
 import type { RecipeRecord } from '../db/db'
 import { modeSummary, relativeTime } from '../lib/format'
-import { errorMessage } from '../lib/mc'
+import { errorMessage, hasRelay } from '../lib/mc'
 import { deleteRecipeLocal, prepareImage, releaseImageUrl, saveRecipe, storeImage, syncStateOf, useImageUrl, useRecipe } from '../lib/recipes'
 import { publishRecipe, resolveConflict, unpublishRecipe } from '../lib/sync'
 import { useSettings } from '../lib/settings'
@@ -499,7 +499,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
           )}
         </div>
         {state === 'local' && (
-          <button type="button" className="btn primary" disabled={!!busy || !settings?.relayUrl} onClick={() => void run('publish')}>
+          <button type="button" className="btn primary" disabled={!!busy || !hasRelay(settings)} onClick={() => void run('publish')}>
             <Icon name="upload" /> {busy === 'publish' ? 'Publication…' : online ? 'Publier sur Monsieur Cuisine' : 'Publier au retour du réseau'}
           </button>
         )}

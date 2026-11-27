@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "dev": "npm run dev -w @mr-chef/web",
-    "build": "npm run build -w @mr-chef/web",
+    "build": "npm run build -w @mr-chef/web && npm run bundle -w @mr-chef/relay",
     "preview": "npm run preview -w @mr-chef/web",
     "relay:dev": "npm run dev -w @mr-chef/relay",
     "relay:deploy": "npm run deploy -w @mr-chef/relay",

@@ -30,18 +30,35 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Vérifier la configuration
+        env:
+          MODE: ${{ vars.RELAY_MODE || 'public' }}
         run: |
           test -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" || { echo "Secret CLOUDFLARE_API_TOKEN manquant"; exit 1; }
           test -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" || { echo "Secret CLOUDFLARE_ACCOUNT_ID manquant"; exit 1; }
-          test -n "${{ secrets.RELAY_SHARED_SECRET }}" || { echo "Secret RELAY_SHARED_SECRET manquant"; exit 1; }
           test -n "${{ vars.RELAY_ALLOWED_ORIGIN }}" || { echo "Variable RELAY_ALLOWED_ORIGIN manquante"; exit 1; }
-      - uses: cloudflare/wrangler-action@v3
+          case "$MODE" in
+            public) echo "Relais public : ouvert à tout visiteur de ${{ vars.RELAY_ALLOWED_ORIGIN }}" ;;
+            private) test -n "${{ secrets.RELAY_SHARED_SECRET }}" || { echo "Mode privé : secret RELAY_SHARED_SECRET manquant"; exit 1; } ;;
+            *) echo "RELAY_MODE doit valoir public ou private"; exit 1 ;;
+          esac
+      # Relais public (par défaut) : pas de secret, le cookie de chaque utilisateur suffit.
+      - if: vars.RELAY_MODE != 'private'
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/relay
           packageManager: npm
-          command: deploy --var ALLOWED_ORIGIN:${{ vars.RELAY_ALLOWED_ORIGIN }}
+          command: deploy --var ALLOWED_ORIGIN:${{ vars.RELAY_ALLOWED_ORIGIN }} --var RELAY_PUBLIC:true
+      # Relais privé : réservé à qui connaît RELAY_SHARED_SECRET.
+      - if: vars.RELAY_MODE == 'private'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/relay
+          packageManager: npm
+          command: deploy --var ALLOWED_ORIGIN:${{ vars.RELAY_ALLOWED_ORIGIN }} --var RELAY_PUBLIC:false
           secrets: |
             RELAY_SHARED_SECRET
         env:

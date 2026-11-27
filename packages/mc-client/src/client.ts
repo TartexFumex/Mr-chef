@@ -4,6 +4,7 @@ import type { HttpMethod } from './endpoints'
 export interface RelayConfig {
   /** Adresse du relais, ex. https://mr-chef-relay.exemple.workers.dev */
   url: string
+  /** Vide pour un relais public. */
   secret: string
 }
 
@@ -27,7 +28,7 @@ const MESSAGES: Record<McErrorKind, string> = {
   session_expired: 'Session Monsieur Cuisine expirée. Reconnectez-vous sur monsieur-cuisine.com puis recollez votre session.',
   mc_unavailable: 'Monsieur Cuisine ne répond pas. Réessayez dans quelques minutes.',
   mc_error: 'Monsieur Cuisine a refusé la demande.',
-  quota: 'Quota du relais atteint pour aujourd’hui. Réessayez demain.',
+  quota: 'Trop de requêtes vers le relais. Patientez une minute puis réessayez.',
 }
 
 export class McError extends Error {
@@ -71,7 +72,7 @@ export class McClient {
 
   private async send(path: string, init: RequestInit, needsSession: boolean): Promise<Response> {
     const headers = new Headers(init.headers)
-    headers.set('x-relay-secret', this.relay.secret)
+    if (this.relay.secret) headers.set('x-relay-secret', this.relay.secret)
     if (needsSession) {
       const session = await this.getSession()
       if (!session) throw new McError('session_missing')
@@ -110,9 +111,9 @@ export class McClient {
     return env.data
   }
 
-  async health(): Promise<{ ok: boolean; version: string }> {
+  async health(): Promise<{ ok: boolean; version: string; public?: boolean }> {
     const res = await this.send('/health', { method: 'GET' }, false)
-    return (await res.json()) as { ok: boolean; version: string }
+    return (await res.json()) as { ok: boolean; version: string; public?: boolean }
   }
 
   getUser() {

@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { DEFAULT_ROBOT_ID, type RobotId } from '@mr-chef/recipe-schema'
 import { db, type ProviderId } from '../db/db'
+import { PUBLIC_RELAY_URL, type RelayMode } from './relay'
 
 export interface Settings {
   onboardingDone: boolean
@@ -9,6 +10,8 @@ export interface Settings {
   models: Partial<Record<ProviderId, string>>
   /** null = prompt par défaut */
   systemPrompt: string | null
+  /** public : relais de l'administrateur du site ; custom : relais personnel. */
+  relayMode: RelayMode
   relayUrl: string
   mcUser: string | null
   mcExpiresAt: number | null
@@ -23,6 +26,7 @@ export const DEFAULT_SETTINGS: Settings = {
   activeProvider: null,
   models: {},
   systemPrompt: null,
+  relayMode: PUBLIC_RELAY_URL ? 'public' : 'custom',
   relayUrl: '',
   mcUser: null,
   mcExpiresAt: null,

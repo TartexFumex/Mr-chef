@@ -14,7 +14,7 @@ import { getSecret, setSecret, type SecretId } from './vault'
 export interface TransferBundle {
   v: 1
   createdAt: number
-  prefs?: Pick<Settings, 'robotId' | 'activeProvider' | 'models' | 'systemPrompt' | 'defaultServings'>
+  prefs?: Pick<Settings, 'robotId' | 'activeProvider' | 'models' | 'systemPrompt' | 'defaultServings'> & { relayMode?: Settings['relayMode'] }
   relay?: { url: string; secret: string }
   ai?: Partial<Record<ProviderId, string>>
   mc?: { session: string; user: string | null; expiresAt: number | null }
@@ -55,11 +55,11 @@ export async function buildBundle(choice: TransferChoice): Promise<TransferBundl
       models: s.models,
       systemPrompt: s.systemPrompt,
       defaultServings: s.defaultServings,
+      relayMode: s.relayMode,
     }
   }
   if (choice.relay) {
-    const secret = await getSecret('relay:secret')
-    if (s.relayUrl && secret) bundle.relay = { url: s.relayUrl, secret }
+    if (s.relayUrl) bundle.relay = { url: s.relayUrl, secret: (await getSecret('relay:secret')) ?? '' }
   }
   if (choice.ai) {
     const ai: TransferBundle['ai'] = {}
@@ -185,7 +185,7 @@ export async function applyBundle(b: TransferBundle): Promise<boolean> {
   }
   if (b.relay) {
     patch.relayUrl = b.relay.url
-    await setSecret('relay:secret', b.relay.secret)
+    if (b.relay.secret) await setSecret('relay:secret', b.relay.secret)
   }
   const ai = Object.entries(b.ai ?? {}) as [ProviderId, string][]
   for (const [p, key] of ai) await setSecret(`ai:${p}` as SecretId, key)

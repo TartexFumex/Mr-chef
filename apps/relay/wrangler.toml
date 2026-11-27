@@ -1,4 +1,4 @@
-# Relais personnel Mr Chef : voir docs/relais-cloudflare.md
+# Relais Mr Chef : voir docs/relais-cloudflare.md et la page Aide de l'application
 name = "mr-chef-relay"
 main = "src/index.ts"
 compatibility_date = "2026-11-01"
@@ -8,6 +8,16 @@ workers_dev = true
 # Adresse(s) de Mr Chef autorisée(s), séparées par des virgules.
 # Remplacée au déploiement par la variable GitHub RELAY_ALLOWED_ORIGIN.
 ALLOWED_ORIGIN = "http://localhost:5173"
+# "true" : ouvert à tous les visiteurs du site autorisé (le cookie Monsieur Cuisine de
+# chacun reste la seule authentification). "false" : réservé au secret RELAY_SHARED_SECRET.
+RELAY_PUBLIC = "false"
+
+# Limite par adresse IP : 120 requêtes par minute (une synchronisation complète en fait
+# environ deux par recette). Disponible sur le plan gratuit de Cloudflare.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 120, period = 60 }
 
 # Aucun journal de requêtes : la session Monsieur Cuisine transite par ce relais.
 [observability]
