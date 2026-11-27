@@ -1,4 +1,4 @@
-# Relais Mr Chef : voir docs/relais-cloudflare.md et la page Aide de l'application
+# Mr Chef relay: see docs/cloudflare-relay.md and the in-app Help page
 name = "mr-chef-relay"
 main = "src/index.ts"
 compatibility_date = "2026-11-01"
