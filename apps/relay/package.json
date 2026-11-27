@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "bundle": "wrangler deploy --dry-run --outdir ../web/dist/relais"
   },
-  "dependencies": { "@mr-chef/mc-client": "*" },
+  "dependencies": {
+    "@mr-chef/mc-client": "*"
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "4.20260702.1",
     "wrangler": "4.169.0"

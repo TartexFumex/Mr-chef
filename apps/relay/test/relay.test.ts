@@ -58,6 +58,35 @@ describe('relais', () => {
     expect(await r.json()).toEqual({ error: 'mc_session_expired' })
   })
 
+  it('en mode public, accepte les appels sans secret mais garde la liste blanche', async () => {
+    const pub: Env = { ALLOWED_ORIGIN: ORIGIN, RELAY_PUBLIC: 'true', RELAY_SHARED_SECRET: 'ancien-secret' }
+    const h = await handle(req('/health'), pub)
+    expect(await h.json()).toMatchObject({ ok: true, public: true })
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"code":0,"message":"","data":{}}', { status: 200 })))
+    const ok = await handle(req('/mc', { method: 'POST', headers: { 'x-relay-secret': '' }, body: JSON.stringify({ endpoint: 'api/v1/users', method: 'GET' }) }), pub)
+    expect(ok.status).toBe(200)
+    const no = await handle(req('/mc', { method: 'POST', body: JSON.stringify({ endpoint: 'api/v1/admin', method: 'GET' }) }), pub)
+    expect(no.status).toBe(403)
+    const evil = await handle(req('/mc', { method: 'POST', headers: { origin: 'https://evil.example' }, body: '{}' }), pub)
+    expect(evil.status).toBe(403)
+  })
+
+  it('limite le nombre de requêtes par adresse IP', async () => {
+    const seen: string[] = []
+    const limited: Env = {
+      ALLOWED_ORIGIN: ORIGIN,
+      RATE_LIMITER: { limit: async ({ key }) => (seen.push(key), { success: seen.length <= 1 }) },
+    }
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"code":0,"message":"","data":{}}', { status: 200 })))
+    const body = JSON.stringify({ endpoint: 'api/v1/users', method: 'GET' })
+    const first = await handle(req('/mc', { method: 'POST', headers: { 'cf-connecting-ip': '203.0.113.7' }, body }), limited)
+    expect(first.status).toBe(200)
+    const second = await handle(req('/mc', { method: 'POST', headers: { 'cf-connecting-ip': '203.0.113.7' }, body }), limited)
+    expect(second.status).toBe(429)
+    expect(second.headers.get('access-control-allow-origin')).toBe(ORIGIN)
+    expect(seen).toEqual(['203.0.113.7', '203.0.113.7'])
+  })
+
   it('n’envoie des images que vers le stockage Monsieur Cuisine', async () => {
     const bad = await handle(req(`/upload?url=${encodeURIComponent('https://evil.example/x')}`, { method: 'PUT', headers: { 'content-type': 'image/png' }, body: 'x' }), env)
     expect(bad.status).toBe(403)
