@@ -30,6 +30,8 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
+          # Adresse du relais public proposé par défaut (variable GitHub, facultative).
+          VITE_PUBLIC_RELAY_URL: ${{ vars.PUBLIC_RELAY_URL }}
       - run: npm run test:e2e
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
