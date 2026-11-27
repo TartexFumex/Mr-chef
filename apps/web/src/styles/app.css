@@ -161,3 +161,18 @@ dialog::backdrop { background: rgb(14 34 25 / 55%); }
 .choice:has(input:checked) { border-color: var(--sapin-2); box-shadow: var(--focus); }
 .choice input { margin-top: 4px; accent-color: var(--sapin-2); width: 18px; height: 18px; }
 ol.howto { padding-left: 22px; } ol.howto li + li { margin-top: 6px; }
+
+/* Transfert et aide */
+.qr { background: #fff; border-radius: var(--radius); padding: 8px; width: min(360px, 100%); margin: 0 auto; }
+.qr svg { width: 100%; height: auto; display: block; }
+.passphrase { font-size: 1.4rem; letter-spacing: .08em; }
+.scanner { width: 100%; border-radius: var(--radius); background: #000; aspect-ratio: 1; object-fit: cover; }
+.help h2 { margin-top: 28px; scroll-margin-top: 72px; }
+.help h3 { margin-top: 16px; }
+.help li + li { margin-top: 4px; }
+.help pre { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; overflow-x: auto; font: .85rem/1.5 var(--f-mono); }
+.help code { font-family: var(--f-mono); font-size: .9em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.help pre code { background: none; padding: 0; }
+.help table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.help th, .help td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--line); }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }

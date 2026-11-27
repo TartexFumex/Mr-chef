@@ -1,5 +1,8 @@
 # Mettre en place le relais Cloudflare de Mr Chef
 
+> Ce guide est aussi intégré à l'application : page **Aide** (`#/aide`), qui affiche directement
+> l'origine à autoriser pour votre installation.
+
 Le site Monsieur Cuisine n'accepte les requêtes que depuis son propre domaine (CORS) et
 authentifie tout par un cookie WordPress `HttpOnly`. Un navigateur ne peut donc pas parler
 directement à Monsieur Cuisine depuis Mr Chef. Le **relais** est un petit Cloudflare Worker
@@ -23,7 +26,9 @@ Le plan gratuit de Cloudflare suffit largement (100 000 requêtes par jour).
    - secrets : `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `RELAY_SHARED_SECRET` ;
    - variable : `RELAY_ALLOWED_ORIGIN` = `https://<compte>.github.io` (sans chemin ni `/` final ;
      plusieurs origines possibles, séparées par des virgules, ex. `https://<compte>.github.io,http://localhost:5173`).
-3. Onglet **Actions › Déployer le relais › Run workflow**.
+3. Onglet **Actions › Déployer le relais › Run workflow**. Ensuite, chaque push qui modifie
+   `apps/relay/` ou `packages/mc-client/` sur la branche principale redéploie le relais
+   (seulement si `RELAY_ALLOWED_ORIGIN` est défini).
 4. L'adresse du Worker s'affiche à la fin du journal, de la forme
    `https://mr-chef-relay.<sous-domaine>.workers.dev`.
 
@@ -41,8 +46,9 @@ npx wrangler deploy --var ALLOWED_ORIGIN:https://<compte>.github.io
 
 - Ouvrez `https://mr-chef-relay.<sous-domaine>.workers.dev/health` : la réponse doit être `{"ok":true,…}`.
 - Dans Mr Chef, **Paramètres › Relais** : collez l'adresse et le secret, puis **Tester le relais**.
-- **Copier le lien de configuration** produit un lien qui préremplit le relais sur votre téléphone
-  (le secret est dans le fragment `#`, jamais envoyé au serveur).
+- Pour configurer un téléphone : **Paramètres › Transférer vers un autre appareil** génère un QR code
+  chiffré (AES-256, clé dérivée d'une phrase secrète affichée à part) avec les clés IA, le relais
+  et la session.
 
 ## Développement local
 
@@ -61,6 +67,7 @@ npm run dev                                            # http://localhost:5173
 | Origine refusée par le relais | `RELAY_ALLOWED_ORIGIN` ne correspond pas à l'adresse de Mr Chef | Corrigez la variable et redéployez |
 | Secret incorrect | Secret différent entre le Worker et Mr Chef | Recollez le même secret des deux côtés |
 | Session Monsieur Cuisine expirée | Le cookie WordPress a expiré ou vous vous êtes déconnecté du site | Reconnectez-vous sur monsieur-cuisine.com et recollez la session |
+| Workflow « Déployer le relais » introuvable | Le fichier n'est pas sur la branche principale, ou GitHub ne l'a pas encore indexé | Vérifiez `.github/workflows/deploy-relay.yml` sur la branche principale ; un push qui le modifie le fait apparaître |
 | Relais injoignable | Adresse erronée ou pas de réseau | Vérifiez l'adresse `…workers.dev` |
 
 ## Sécurité

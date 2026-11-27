@@ -2,12 +2,25 @@ name: Déployer le relais
 
 on:
   workflow_dispatch:
+  # Redéploie automatiquement quand le code du relais change sur la branche principale.
+  push:
+    branches: [main, master]
+    paths:
+      - apps/relay/**
+      - packages/mc-client/**
+      - .github/workflows/deploy-relay.yml
+
+concurrency:
+  group: deploy-relay
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
   deploy:
+    # Sur un push, on ne déploie que si le relais a déjà été configuré (variable présente).
+    if: github.event_name == 'workflow_dispatch' || vars.RELAY_ALLOWED_ORIGIN != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

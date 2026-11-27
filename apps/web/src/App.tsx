@@ -5,7 +5,9 @@ import { Toasts } from './components/toast'
 import { useSettings } from './lib/settings'
 import { processPendingQueue } from './lib/sync'
 import { Editor } from './pages/Editor'
+import { Help } from './pages/Help'
 import { Home } from './pages/Home'
+import { Import } from './pages/Import'
 import { Library } from './pages/Library'
 import { Onboarding } from './pages/Onboarding'
 import { Settings } from './pages/Settings'
@@ -36,6 +38,8 @@ export function App() {
         <Banners />
         <Routes>
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/importer" element={<Import />} />
+          <Route path="/aide" element={<Help />} />
           <Route path="/" element={<Guard><Home /></Guard>} />
           <Route path="/recettes" element={<Guard><Library /></Guard>} />
           <Route path="/recette/:id" element={<Guard><Editor /></Guard>} />

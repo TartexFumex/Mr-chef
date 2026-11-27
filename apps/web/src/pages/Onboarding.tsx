@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { DEFAULT_ROBOT_ID, type RobotId } from '@mr-chef/recipe-schema'
 import { AiKeyEditor } from '../components/AiKeyEditor'
+import { Icon } from '../components/Icon'
 import { Logo } from '../components/Logo'
 import { RelayForm } from '../components/RelayForm'
 import { RobotPicker } from '../components/RobotPicker'
@@ -17,15 +18,14 @@ const STEPS = ['Relais', 'Monsieur Cuisine', 'Robot', 'Intelligence artificielle
 export function Onboarding() {
   const settings = useSettings()
   const navigate = useNavigate()
-  const [params] = useSearchParams()
   const [step, setStep] = useState(0)
   const [relaySecret, setRelaySecret] = useState<string | null>(null)
   const [robotChoice, setRobot] = useState<RobotId | null>(null)
   const [provider, setProvider] = useState<ProviderId>('mistral')
 
   useEffect(() => {
-    void getSecret('relay:secret').then((s) => setRelaySecret(params.get('secret') ?? s ?? ''))
-  }, [params])
+    void getSecret('relay:secret').then((s) => setRelaySecret(s ?? ''))
+  }, [])
   const stored = useStoredSecretIds()
 
   if (!settings || relaySecret === null || !stored) return null
@@ -42,7 +42,12 @@ export function Onboarding() {
     <main className="main">
       <div className="row" style={{ gap: 12 }}>
         <Logo size={48} />
-        <h1 style={{ margin: 0 }}>Bienvenue dans Mr Chef</h1>
+        <h1 style={{ margin: 0 }} className="grow">
+          Bienvenue dans Mr Chef
+        </h1>
+        <Link to="/aide" className="icon-btn" aria-label="Aide">
+          <Icon name="help" />
+        </Link>
       </div>
       <div className="steps-nav" aria-hidden>
         {STEPS.map((s, i) => (
@@ -54,10 +59,19 @@ export function Onboarding() {
       </p>
 
       {step === 0 && (
+        <div className="notice info row" style={{ marginBottom: 12 }}>
+          <span className="grow">Mr Chef est déjà configuré sur un autre appareil ?</span>
+          <Link to="/importer" className="btn">
+            Importer une configuration
+          </Link>
+        </div>
+      )}
+
+      {step === 0 && (
         <section className="card stack">
           <h2>Votre relais personnel</h2>
           <RelayForm
-            initialUrl={params.get('relay') ?? settings.relayUrl}
+            initialUrl={settings.relayUrl}
             initialSecret={relaySecret}
             submitLabel="Enregistrer et continuer"
             onSaved={next}
