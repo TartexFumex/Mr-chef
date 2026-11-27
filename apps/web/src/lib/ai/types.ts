@@ -42,7 +42,7 @@ export class AiError extends Error {
   constructor(
     public readonly kind: AiErrorKind,
     public readonly provider: string,
-    detail?: string,
+    public readonly detail?: string,
   ) {
     super(detail ? `${MESSAGES[kind]} (${detail})` : MESSAGES[kind])
     this.name = 'AiError'
@@ -56,7 +56,7 @@ export function errorFromStatus(status: number, provider: string, detail?: strin
 }
 
 export function parseJsonOutput(text: string | null | undefined, provider: string): unknown {
-  if (!text) throw new AiError('invalid_output', provider, 'réponse vide')
+  if (!text) throw new AiError('invalid_output', provider, 'empty')
   try {
     return JSON.parse(text)
   } catch {

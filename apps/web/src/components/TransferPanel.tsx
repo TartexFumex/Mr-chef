@@ -3,16 +3,13 @@ import { renderSVG } from 'uqr'
 import { buildBundle, describeBundle, encryptBundle, generatePassphrase, transferLink, type TransferChoice } from '../lib/transfer'
 import { Icon } from './Icon'
 import { toast } from './toast'
+import { useT } from '../i18n'
 
-const OPTIONS: { id: keyof TransferChoice; label: string }[] = [
-  { id: 'ai', label: 'Clés IA' },
-  { id: 'relay', label: 'Relais (adresse et secret)' },
-  { id: 'mc', label: 'Session Monsieur Cuisine' },
-  { id: 'prefs', label: 'Réglages (robot, modèles, prompt, portions)' },
-]
+const OPTIONS: (keyof TransferChoice)[] = ['ai', 'relay', 'mc', 'prefs']
 
 /** Facilitateur de configuration : QR code chiffré à scanner depuis un autre appareil. */
 export function TransferPanel() {
+  const t = useT()
   const [choice, setChoice] = useState<TransferChoice>({ ai: true, relay: true, mc: true, prefs: true })
   const [result, setResult] = useState<null | { link: string; svg: string; passphrase: string; contents: string[] }>(null)
   const [busy, setBusy] = useState(false)
@@ -34,12 +31,12 @@ export function TransferPanel() {
     return (
       <div className="stack">
         <p className="notice warn small">
-          Ce QR code donne accès à vos clés et à votre compte. Ne le partagez pas et ne le photographiez pas : scannez-le
-          directement depuis l’autre appareil, puis fermez cette fenêtre.
+          {t.transfer.warning}
         </p>
-        <div className="qr" role="img" aria-label="QR code de configuration" dangerouslySetInnerHTML={{ __html: result.svg }} />
+        <div className="qr" role="img" aria-label={t.transfer.qrLabel} dangerouslySetInnerHTML={{ __html: result.svg }} />
         <p style={{ textAlign: 'center' }}>
-          Phrase secrète à saisir sur l’autre appareil :<br />
+          {t.transfer.passphraseIs}
+          <br />
           <strong className="mono passphrase">{result.passphrase}</strong>
         </p>
         <ul className="small muted">
@@ -51,12 +48,12 @@ export function TransferPanel() {
           <button
             type="button"
             className="btn"
-            onClick={() => void navigator.clipboard?.writeText(result.link).then(() => toast('Lien copié (sans la phrase secrète).'))}
+            onClick={() => void navigator.clipboard?.writeText(result.link).then(() => toast(t.transfer.linkCopied))}
           >
-            <Icon name="copy" /> Copier le lien
+            <Icon name="copy" /> {t.transfer.copyLink}
           </button>
           <button type="button" className="btn primary" onClick={() => setResult(null)}>
-            Terminé
+            {t.transfer.done}
           </button>
         </div>
       </div>
@@ -66,13 +63,14 @@ export function TransferPanel() {
   return (
     <div className="stack">
       <p className="muted small">
-        Configurez votre téléphone en un scan : Mr Chef crée un QR code chiffré et une phrase secrète affichée à part. Sur le
-        téléphone, ouvrez Mr Chef › <strong>Importer une configuration</strong>, scannez, puis tapez la phrase.
+        {t.transfer.intro1}
+        <strong>{t.importPage.title}</strong>
+        {t.transfer.intro2}
       </p>
-      {OPTIONS.map((o) => (
-        <label key={o.id} className="check">
-          <input type="checkbox" checked={choice[o.id]} onChange={(e) => setChoice({ ...choice, [o.id]: e.target.checked })} />
-          <span>{o.label}</span>
+      {OPTIONS.map((id) => (
+        <label key={id} className="check">
+          <input type="checkbox" checked={choice[id]} onChange={(e) => setChoice({ ...choice, [id]: e.target.checked })} />
+          <span>{t.transfer.options[id]}</span>
         </label>
       ))}
       <button
@@ -81,7 +79,7 @@ export function TransferPanel() {
         disabled={busy || !Object.values(choice).some(Boolean)}
         onClick={() => void generate()}
       >
-        {busy ? 'Chiffrement…' : 'Générer le QR code'}
+        {busy ? t.transfer.encrypting : t.transfer.generate}
       </button>
     </div>
   )

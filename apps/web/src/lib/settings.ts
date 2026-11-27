@@ -18,6 +18,10 @@ export interface Settings {
   sessionExpired: boolean
   defaultServings: number
   lastRefreshAt: number | null
+  /** null = langue du navigateur */
+  lang: 'fr' | 'en' | null
+  /** Date à laquelle l'invitation à installer l'application a été écartée. */
+  installDismissedAt: number | null
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -33,6 +37,8 @@ export const DEFAULT_SETTINGS: Settings = {
   sessionExpired: false,
   defaultServings: 4,
   lastRefreshAt: null,
+  lang: null,
+  installDismissedAt: null,
 }
 
 export async function getSettings(): Promise<Settings> {

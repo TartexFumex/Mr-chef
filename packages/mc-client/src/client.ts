@@ -34,7 +34,7 @@ const MESSAGES: Record<McErrorKind, string> = {
 export class McError extends Error {
   constructor(
     public readonly kind: McErrorKind,
-    detail?: string,
+    public readonly detail?: string,
     public readonly status?: number,
   ) {
     super(detail ? `${MESSAGES[kind]} (${detail})` : MESSAGES[kind])

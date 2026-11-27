@@ -12,7 +12,7 @@ export const mistralProvider: RecipeProvider = {
   id: 'mistral',
   label: 'Mistral AI',
   keyUrl: 'https://console.mistral.ai/api-keys',
-  keyPlaceholder: 'Clé Mistral',
+  keyPlaceholder: '••••••••',
   defaultModels: [
     { id: 'mistral-large-latest', label: 'Mistral Large' },
     { id: 'mistral-medium-latest', label: 'Mistral Medium' },

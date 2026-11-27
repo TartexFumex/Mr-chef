@@ -3,8 +3,16 @@ import { CATEGORIES, INGREDIENT_UNITS, SERVING_UNITS, type IngredientUnit, type 
 import { newKey, type DeviceSettings, type Recipe, type Step } from './recipe'
 import { modeSpec, type ModeSpec, type Range, type RobotProfile } from './robots'
 
+export type FixKind = 'time' | 'temperature' | 'speed' | 'weight' | 'unavailable'
+
+/** Correction appliquée à une étape ; `message` est en français, l'interface traduit à partir des champs. */
 export interface Fix {
   stepIndex?: number
+  kind: FixKind
+  /** Programme concerné (type). */
+  mode: string
+  /** Nouvelle valeur après correction (absente pour « unavailable »). */
+  value?: number
   message: string
 }
 
@@ -18,12 +26,12 @@ function clampRange(value: number, range: Range): number {
 /** Ajuste les réglages d'une étape aux plages du programme, en listant les corrections faites. */
 export function fitSettings(spec: ModeSpec, input: DeviceSettings, fixes: Fix[], stepIndex?: number): DeviceSettings {
   const out: DeviceSettings = {}
-  const note = (message: string) => fixes.push({ stepIndex, message })
+  const note = (kind: FixKind, value: number, message: string) => fixes.push({ stepIndex, kind, mode: spec.type, value, message })
 
   if (spec.time) {
     const raw = input.time ?? spec.time.min
     const v = clampRange(raw, spec.time)
-    if (input.time !== undefined && v !== input.time) note(`Durée ramenée à ${v} s (${spec.label})`)
+    if (input.time !== undefined && v !== input.time) note('time', v, `Durée ramenée à ${v} s (${spec.label})`)
     out.time = v
   }
   if (spec.temperature) {
@@ -32,7 +40,7 @@ export function fitSettings(spec: ModeSpec, input: DeviceSettings, fixes: Fix[],
     if (raw <= 0) v = 0
     else if (raw < spec.temperature.min) v = spec.temperature.min
     else v = clampRange(raw, spec.temperature)
-    if (input.temperature !== undefined && v !== input.temperature) note(`Température ramenée à ${v} °C (${spec.label})`)
+    if (input.temperature !== undefined && v !== input.temperature) note('temperature', v, `Température ramenée à ${v} °C (${spec.label})`)
     out.temperature = v
   }
   if (spec.speed) {
@@ -41,14 +49,14 @@ export function fitSettings(spec: ModeSpec, input: DeviceSettings, fixes: Fix[],
     if (spec.maxSpeedWhenHeating && (out.temperature ?? 0) > 0 && v > spec.maxSpeedWhenHeating) {
       v = spec.maxSpeedWhenHeating
     }
-    if (input.speed !== undefined && v !== input.speed) note(`Vitesse ramenée à ${v} (${spec.label})`)
+    if (input.speed !== undefined && v !== input.speed) note('speed', v, `Vitesse ramenée à ${v} (${spec.label})`)
     out.speed = v
   }
   if (spec.clockwise) out.clockwise = input.clockwise ?? false
   if (spec.weight) {
     const raw = input.weight ?? spec.weight.min
     const v = clampRange(raw, spec.weight)
-    if (input.weight !== undefined && v !== input.weight) note(`Poids ramené à ${v} g (${spec.label})`)
+    if (input.weight !== undefined && v !== input.weight) note('weight', v, `Poids ramené à ${v} g (${spec.label})`)
     out.weight = v
   }
   return out
@@ -61,7 +69,7 @@ export function fitRecipeToRobot(recipe: Recipe, robot: RobotProfile): { recipe:
     if (!step.mode) return step
     const spec = modeSpec(robot, step.mode.type)
     if (!spec) {
-      fixes.push({ stepIndex: i, message: `Programme « ${step.mode.type} » indisponible sur ${robot.name}, étape gardée sans programme` })
+      fixes.push({ stepIndex: i, kind: 'unavailable', mode: step.mode.type, message: `Programme « ${step.mode.type} » indisponible sur ${robot.name}, étape gardée sans programme` })
       return { ...step, mode: null }
     }
     const settings = fitSettings(spec, step.mode.settings, fixes, i)

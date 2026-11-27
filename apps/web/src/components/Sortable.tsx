@@ -11,6 +11,7 @@ import {
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Icon } from './Icon'
+import { useT } from '../i18n'
 
 /** Liste réordonnable par glisser-déposer (souris, tactile, clavier). */
 export function SortableList<T extends { key: string }>({
@@ -46,9 +47,10 @@ export function SortableList<T extends { key: string }>({
 }
 
 function SortableItem({ id, children }: { id: string; children: (handle: ReactNode) => ReactNode }) {
+  const label = useT().common.move
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   const handle = (
-    <button type="button" className="drag" aria-label="Déplacer" {...attributes} {...listeners}>
+    <button type="button" className="drag" aria-label={label} {...attributes} {...listeners}>
       <Icon name="grip" />
     </button>
   )

@@ -42,7 +42,7 @@ export async function chatCompletionJson(
   }
   const choice = body.choices?.[0]
   if (choice?.message?.refusal) throw new AiError('refused', provider)
-  if (choice?.finish_reason === 'length') throw new AiError('invalid_output', provider, 'réponse tronquée')
+  if (choice?.finish_reason === 'length') throw new AiError('invalid_output', provider, 'truncated')
   return parseJsonOutput(choice?.message?.content, provider)
 }
 

@@ -2,10 +2,12 @@ import { useCallback, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { canScanQr, QrScanner } from '../components/QrScanner'
 import { TopBar } from '../components/TopBar'
-import { applyBundle, decryptBundle, describeBundle, extractCode, TransferError, type TransferBundle } from '../lib/transfer'
+import { describeError, useT } from '../i18n'
+import { applyBundle, decryptBundle, describeBundle, extractCode, formatPassphraseInput, type TransferBundle } from '../lib/transfer'
 
 /** Import d'une configuration depuis un QR code ou un lien chiffré. */
 export function Import() {
+  const t = useT()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [code, setCode] = useState(params.get('c') ?? '')
@@ -26,7 +28,7 @@ export function Import() {
     try {
       setBundle(await decryptBundle(extractCode(code), passphrase))
     } catch (err) {
-      setError(err instanceof TransferError ? err.message : 'Code de configuration illisible.')
+      setError(err instanceof Error ? describeError(err, t) : t.errors.transfer.unreadable!)
     } finally {
       setBusy(false)
     }
@@ -40,32 +42,31 @@ export function Import() {
 
   return (
     <>
-      <TopBar title="Importer une configuration" back="/onboarding" />
+      <TopBar title={t.importPage.title} back="/onboarding" />
       <main className="main stack">
         {bundle ? (
           <div className="card stack">
-            <h2>Configuration déchiffrée</h2>
-            <p>Elle contient :</p>
+            <h2>{t.importPage.decrypted}</h2>
+            <p>{t.importPage.contains}</p>
             <ul>
               {describeBundle(bundle).map((d) => (
                 <li key={d}>{d}</li>
               ))}
             </ul>
-            <p className="muted small">Les éléments présents remplacent ceux de cet appareil. Vos recettes ne sont pas touchées.</p>
+            <p className="muted small">{t.importPage.replaces}</p>
             <div className="row end">
               <button type="button" className="btn ghost" onClick={() => setBundle(null)}>
-                Annuler
+                {t.common.cancel}
               </button>
               <button type="button" className="btn primary" onClick={() => void confirm()}>
-                Importer
+                {t.importPage.import}
               </button>
             </div>
           </div>
         ) : (
           <form className="card stack" onSubmit={unlock}>
             <p className="muted small">
-              Sur l’appareil déjà configuré : Paramètres › Transférer vers un autre appareil › Générer le QR code.{' '}
-              <Link to="/aide#transfert">En savoir plus</Link>
+              {t.importPage.where} <Link to="/aide#transfert">{t.importPage.more}</Link>
             </p>
             {scanning ? (
               <QrScanner onResult={onScan} onCancel={() => setScanning(false)} />
@@ -73,11 +74,11 @@ export function Import() {
               <>
                 {canScanQr() && (
                   <button type="button" className="btn" onClick={() => setScanning(true)}>
-                    Scanner le QR code
+                    {t.importPage.scan}
                   </button>
                 )}
                 <label className="field">
-                  <span>{canScanQr() ? 'ou collez le lien' : 'Lien de configuration'}</span>
+                  <span>{canScanQr() ? t.importPage.orPaste : t.importPage.link}</span>
                   <textarea
                     rows={3}
                     spellCheck={false}
@@ -89,16 +90,18 @@ export function Import() {
               </>
             )}
             <label className="field">
-              <span>Phrase secrète</span>
+              <span>{t.importPage.passphrase}</span>
               <input
                 type="text"
                 autoCapitalize="characters"
+                autoCorrect="off"
+                maxLength={19}
                 autoComplete="off"
                 spellCheck={false}
                 className="mono"
                 placeholder="XXXX-XXXX-XXXX-XXXX"
                 value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
+                onChange={(e) => setPassphrase(formatPassphraseInput(e.target.value))}
               />
             </label>
             {error && (
@@ -107,7 +110,7 @@ export function Import() {
               </p>
             )}
             <button type="submit" className="btn primary" disabled={busy || !code.trim() || !passphrase.trim()}>
-              {busy ? 'Déchiffrement…' : 'Déchiffrer'}
+              {busy ? t.importPage.decrypting : t.importPage.decrypt}
             </button>
           </form>
         )}

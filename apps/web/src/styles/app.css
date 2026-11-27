@@ -95,6 +95,9 @@ input[type=number] { font-family: var(--f-mono); }
 .notice.warn { background: var(--safran-bg); color: var(--safran); }
 .notice.error { background: var(--tomate-bg); color: var(--tomate); }
 .notice.info { background: var(--menthe); color: var(--sapin); }
+.install-prompt { display: flex; gap: 12px; align-items: flex-start; width: 100%; }
+.install-prompt > .icon { flex: none; margin-top: 2px; }
+.nowrap { white-space: nowrap; }
 
 /* Accueil */
 .home { display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 6vh; }

@@ -59,7 +59,7 @@ export const anthropicProvider: RecipeProvider = {
         { signal },
       )
       if (res.stop_reason === 'refusal') throw new AiError('refused', 'Claude')
-      if (res.stop_reason === 'max_tokens') throw new AiError('invalid_output', 'Claude', 'réponse tronquée')
+      if (res.stop_reason === 'max_tokens') throw new AiError('invalid_output', 'Claude', 'truncated')
       const text = res.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')
       return parseJsonOutput(text, 'Claude')
     } catch (e) {

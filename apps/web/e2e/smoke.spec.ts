@@ -126,7 +126,11 @@ test('transfert de configuration par QR code chiffré vers un nouvel appareil', 
   await phone.getByLabel('Phrase secrète').fill('MAUV-AISE-PHRA-SE22')
   await phone.getByRole('button', { name: 'Déchiffrer' }).click()
   await expect(phone.getByText('Phrase secrète incorrecte.')).toBeVisible()
-  await phone.getByLabel('Phrase secrète').fill(passphrase.toLowerCase())
+  // Saisie en minuscules et sans tirets : Mr Chef les ajoute au fil de la frappe.
+  const field = phone.getByLabel('Phrase secrète')
+  await field.fill('')
+  await field.pressSequentially(passphrase.replaceAll('-', '').toLowerCase())
+  await expect(field).toHaveValue(passphrase)
   await phone.getByRole('button', { name: 'Déchiffrer' }).click()
   await expect(phone.getByText(/Clés IA : mistral/)).toBeVisible()
   await phone.getByRole('button', { name: 'Importer' }).click()
@@ -141,4 +145,20 @@ test('la page Aide affiche l’origine à autoriser pour le relais', async ({ pa
   await expect(page.getByRole('heading', { name: 'Installer le relais' })).toBeVisible()
   const origin = new URL(page.url()).origin
   await expect(page.getByText(origin, { exact: true }).first()).toBeVisible()
+})
+
+test.describe('navigateur en anglais', () => {
+  test.use({ locale: 'en-US' })
+
+  test('version anglaise par défaut, avec choix de la langue', async ({ page }) => {
+    await page.goto('./')
+    await expect(page.getByRole('heading', { name: 'Welcome to Mr Chef' })).toBeVisible()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+    await page.getByRole('combobox', { name: 'Language' }).selectOption('fr')
+    await expect(page.getByRole('heading', { name: 'Bienvenue dans Mr Chef' })).toBeVisible()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'fr')
+    await page.getByRole('combobox', { name: 'Langue' }).selectOption('en')
+    await page.goto('./#/aide')
+    await expect(page.getByRole('heading', { name: 'Set up the relay' })).toBeVisible()
+  })
 })

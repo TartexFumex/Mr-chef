@@ -77,9 +77,9 @@ export function newKey(prefix = 'k'): string {
   return `${prefix}_${Date.now().toString(36)}${counter.toString(36)}${rand}`
 }
 
-export function emptyRecipe(): Recipe {
+export function emptyRecipe(texts: { title: string; group: string } = { title: 'Nouvelle recette', group: 'Ingrédients' }): Recipe {
   return {
-    title: 'Nouvelle recette',
+    title: texts.title,
     description: '',
     hintsAndTips: '',
     complexity: 'facile',
@@ -88,7 +88,7 @@ export function emptyRecipe(): Recipe {
     preparationTime: 15,
     readyInTime: 30,
     nutrients: { calories: 0, carbohydrate: 0, fat: 0, protein: 0 },
-    ingredientGroups: [{ key: newKey('g'), name: 'Ingrédients', ingredients: [] }],
+    ingredientGroups: [{ key: newKey('g'), name: texts.group, ingredients: [] }],
     steps: [],
   }
 }

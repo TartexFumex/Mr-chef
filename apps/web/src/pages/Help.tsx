@@ -1,50 +1,72 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router'
 import { PublicRelayNotice } from '../components/RelayChooser'
 import { TopBar } from '../components/TopBar'
+import { useLang, useT } from '../i18n'
 import { PUBLIC_RELAY_URL } from '../lib/relay'
-
-const SECTIONS = [
-  ['principe', 'Comment ça marche'],
-  ['relais', 'Installer le relais'],
-  ['session', 'Connecter Monsieur Cuisine'],
-  ['ia', 'Clés IA'],
-  ['transfert', 'Configurer un autre appareil'],
-  ['depannage', 'Dépannage'],
-  ['securite', 'Sécurité'],
-] as const
-
-function Section({ id, children }: { id: (typeof SECTIONS)[number][0]; children: ReactNode }) {
-  const title = SECTIONS.find((s) => s[0] === id)![1]
-  return (
-    <section>
-      <h2 id={id}>{title}</h2>
-      {children}
-    </section>
-  )
-}
+import { HelpEn } from './HelpEn'
+import { Section, SECTIONS } from './HelpSection'
 
 /** Aide intégrée : principe, mise en place du relais Cloudflare, session, clés, transfert, dépannage. */
 export function Help() {
   const location = useLocation()
+  const t = useT()
+  const lang = useLang()
   const origin = window.location.origin
   const appUrl = `${origin}${window.location.pathname}`
 
   useEffect(() => {
     if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView()
-  }, [location.hash])
+  }, [location.hash, lang])
 
   return (
     <>
-      <TopBar title="Aide" />
+      <TopBar title={t.help.title} />
       <main className="main help">
-        <nav className="toc" aria-label="Sommaire">
-          {SECTIONS.map(([id, label]) => (
+        <nav className="toc" aria-label={t.help.toc}>
+          {SECTIONS.map((id) => (
             <Link key={id} to={`/aide#${id}`} className="chip" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-              {label}
+              {t.help.sections[id]}
             </Link>
           ))}
         </nav>
+        {lang === 'en' ? <HelpEn origin={origin} appUrl={appUrl} /> : <HelpFr origin={origin} appUrl={appUrl} />}
+      </main>
+    </>
+  )
+}
+
+/** Installation sur l'écran d'accueil, selon le système. */
+export function InstallHelpFr() {
+  return (
+    <>
+      <p>
+        Installé sur l’écran d’accueil, Mr Chef s’ouvre en plein écran comme une application, démarre plus vite et reste
+        disponible hors ligne. Rien n’est téléchargé depuis un magasin d’applications.
+      </p>
+      <ul>
+        <li>
+          <strong>Android (Chrome, Edge, Samsung Internet)</strong> : touchez <strong>Installer</strong> dans le bandeau
+          proposé par Mr Chef, ou menu <strong>⋮ › Installer l’application</strong>.
+        </li>
+        <li>
+          <strong>iPhone et iPad (Safari)</strong> : touchez le bouton <strong>Partager</strong>, puis{' '}
+          <strong>Sur l’écran d’accueil</strong> et <strong>Ajouter</strong>.
+        </li>
+        <li>
+          <strong>Ordinateur (Chrome, Edge)</strong> : icône d’installation à droite de la barre d’adresse.
+        </li>
+      </ul>
+      <p className="muted small">
+        Sur iPhone, l’application installée a son propre stockage : refaites-y la configuration, par exemple avec le QR code.
+      </p>
+    </>
+  )
+}
+
+function HelpFr({ origin, appUrl }: { origin: string; appUrl: string }) {
+  return (
+    <>
 
         <Section id="principe">
           <p>
@@ -256,6 +278,10 @@ npx wrangler deploy --var ALLOWED_ORIGIN:${origin} --var RELAY_PUBLIC:true`}</co
           </p>
         </Section>
 
+        <Section id="installer">
+          <InstallHelpFr />
+        </Section>
+
         <Section id="depannage">
           <table>
             <thead>
@@ -328,7 +354,6 @@ npx wrangler deploy --var ALLOWED_ORIGIN:${origin} --var RELAY_PUBLIC:true`}</co
             </li>
           </ul>
         </Section>
-      </main>
     </>
   )
 }

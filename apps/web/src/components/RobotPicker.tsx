@@ -1,9 +1,12 @@
-import { ROBOTS, type RobotId } from '@mr-chef/recipe-schema'
+import { modeText, ROBOTS, type RobotId } from '@mr-chef/recipe-schema'
+import { useLang, useT } from '../i18n'
 
 export function RobotPicker({ value, onChange }: { value: RobotId; onChange: (id: RobotId) => void }) {
+  const t = useT()
+  const lang = useLang()
   return (
     <fieldset className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
-      <legend className="sr-only">Modèle de robot</legend>
+      <legend className="sr-only">{t.robot.legend}</legend>
       {ROBOTS.map((r) => (
         <label key={r.id} className="choice">
           <input type="radio" name="robot" value={r.id} checked={value === r.id} onChange={() => onChange(r.id)} />
@@ -11,8 +14,8 @@ export function RobotPicker({ value, onChange }: { value: RobotId; onChange: (id
             <strong>{r.name}</strong>
             <br />
             <span className="muted small">
-              Programmes : {r.modes.map((m) => m.label).join(', ')}
-              {!r.verified && ' · plages reprises du Connect, à confirmer'}
+              {t.robot.programs(r.modes.map((m) => modeText(m.type, lang).label).join(', '))}
+              {!r.verified && t.robot.unverified}
             </span>
           </span>
         </label>

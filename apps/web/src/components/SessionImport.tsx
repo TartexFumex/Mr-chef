@@ -3,12 +3,14 @@ import { parseSessionInput, SessionParseError } from '@mr-chef/mc-client'
 import { errorMessage, getMcClient } from '../lib/mc'
 import { setSettings } from '../lib/settings'
 import { deleteSecret, setSecret } from '../lib/vault'
+import { useT } from '../i18n'
 
 /**
  * Import assisté de la session Monsieur Cuisine : l'utilisateur colle une commande
  * « Copier en tant que cURL » ou l'en-tête cookie ; seuls les cookies WordPress sont gardés.
  */
 export function SessionImport({ onConnected }: { onConnected?: (user: string | null) => void }) {
+  const t = useT()
   const [text, setText] = useState('')
   const [status, setStatus] = useState<{ kind: 'info' | 'error'; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -29,7 +31,7 @@ export function SessionImport({ onConnected }: { onConnected?: (user: string | n
         sessionExpired: false,
       })
       setText('')
-      setStatus({ kind: 'info', text: `Connecté${name ? ` en tant que ${name}` : ''}.` })
+      setStatus({ kind: 'info', text: t.session.connected(name ?? null) })
       onConnected?.(name ?? null)
     } catch (err) {
       if (!(err instanceof SessionParseError)) await deleteSecret('mc:session')
@@ -43,21 +45,24 @@ export function SessionImport({ onConnected }: { onConnected?: (user: string | n
     <form className="stack" onSubmit={connect}>
       <ol className="howto small">
         <li>
-          Ouvrez{' '}
+          {t.session.step1a}
           <a href="https://www.monsieur-cuisine.com/fr/" target="_blank" rel="noreferrer">
             monsieur-cuisine.com
-          </a>{' '}
-          sur un ordinateur et connectez-vous avec votre compte Lidl.
+          </a>
+          {t.session.step1b}
         </li>
-        <li>Ouvrez les outils de développement (F12), onglet Réseau, puis rechargez la page.</li>
+        <li>{t.session.step2}</li>
         <li>
-          Clic droit sur la première requête « monsieur-cuisine.com » › Copier › <strong>Copier en tant que cURL</strong>{' '}
-          (ou copiez la valeur de l’en-tête <span className="mono">cookie</span>).
+          {t.session.step3a}
+          <strong>{t.session.step3b}</strong>
+          {t.session.step3c}
+          <span className="mono">cookie</span>
+          {t.session.step3d}
         </li>
-        <li>Collez le tout ci-dessous. Seuls les cookies de session WordPress sont conservés, chiffrés sur cet appareil.</li>
+        <li>{t.session.step4}</li>
       </ol>
       <label className="field">
-        <span className="sr-only">Session copiée</span>
+        <span className="sr-only">{t.session.label}</span>
         <textarea
           rows={4}
           spellCheck={false}
@@ -69,7 +74,7 @@ export function SessionImport({ onConnected }: { onConnected?: (user: string | n
       </label>
       <div className="row">
         <button type="submit" className="btn primary" disabled={busy || !text.trim()}>
-          {busy ? 'Vérification…' : 'Vérifier et enregistrer'}
+          {busy ? t.session.checking : t.session.verify}
         </button>
       </div>
       {status && (

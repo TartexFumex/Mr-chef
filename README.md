@@ -14,6 +14,10 @@ votre compte Monsieur Cuisine pour les retrouver sur votre robot (Smart, Compact
   [docs/relais-cloudflare.md](docs/relais-cloudflare.md)) avec la session collée depuis le site.
 - **États de synchronisation** : *Locale*, *Publiée*, *Désynchronisée*, dérivés d'une empreinte SHA-256
   de la recette.
+- **Français et anglais** : langue du navigateur par défaut, modifiable dans les Paramètres
+  (textes dans `apps/web/src/i18n`). En anglais, le prompt par défaut demande des recettes en anglais.
+- **Installation** : sur téléphone, Mr Chef propose de s'installer sur l'écran d'accueil (bouton sur Android,
+  marche à suivre sur iPhone) ; l'invitation écartée ne revient pas avant 90 jours.
 
 ## Structure
 
