@@ -1,0 +1,26 @@
+/* Jetons de l'identité Mr Chef (vert sapin, surfaces crème). Contrastes vérifiés AA. */
+:root {
+  --bg: #FAF6EE; --surface: #FFFFFF; --surface-2: #F1ECE1; --line: #DDD5C6;
+  --ink: #16261E; --ink-2: #4A5A52;
+  --sapin: #1B4332; --sapin-2: #2D6A4F; --sapin-3: #40916C; --menthe: #D8F3DC; --menthe-2: #B7E4C7;
+  --safran: #8A5A00; --safran-bg: #FBEFD3; --tomate: #A8402B; --tomate-bg: #F8E1DA;
+  --on-sapin: #FAF6EE;
+  --f-display: "Young Serif", Georgia, "Times New Roman", serif;
+  --f-body: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --radius: 14px; --radius-sm: 10px;
+  --shadow: 0 1px 2px rgb(22 38 30 / 8%), 0 4px 16px rgb(22 38 30 / 6%);
+  --focus: 0 0 0 3px var(--menthe-2);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E2219; --surface: #132C21; --surface-2: #183629; --line: #2A4A3B;
+    --ink: #E8EFE9; --ink-2: #9DB0A5;
+    --sapin: #95D5B2; --sapin-2: #B7E4C7; --sapin-3: #74C69D; --menthe: #1E4434; --menthe-2: #2D6A4F;
+    --safran: #F2C14E; --safran-bg: #3A2F12; --tomate: #EE8F7A; --tomate-bg: #3D1E17;
+    --on-sapin: #0E2219;
+    --shadow: 0 1px 2px rgb(0 0 0 / 30%);
+    color-scheme: dark;
+  }
+}
