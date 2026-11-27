@@ -1,0 +1,16 @@
+{
+  "name": "@mr-chef/relay",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": { "@mr-chef/mc-client": "workspace:*" },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260702.1",
+    "wrangler": "4.169.0"
+  }
+}

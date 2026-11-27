@@ -1,0 +1,14 @@
+# Relais personnel Mr Chef : voir docs/relais-cloudflare.md
+name = "mr-chef-relay"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[vars]
+# Adresse(s) de Mr Chef autorisée(s), séparées par des virgules.
+# Remplacée au déploiement par la variable GitHub RELAY_ALLOWED_ORIGIN.
+ALLOWED_ORIGIN = "http://localhost:5173"
+
+# Aucun journal de requêtes : la session Monsieur Cuisine transite par ce relais.
+[observability]
+enabled = false

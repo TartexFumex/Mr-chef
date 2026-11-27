@@ -1,0 +1,2 @@
+# Copier en .dev.vars pour `pnpm relay:dev` (fichier ignoré par Git)
+RELAY_SHARED_SECRET=changez-moi
