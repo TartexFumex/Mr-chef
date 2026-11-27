@@ -112,6 +112,9 @@ export function Home() {
         <Link to="/parametres" className="btn">
           <Icon name="settings" /> Paramètres
         </Link>
+        <Link to="/aide" className="btn">
+          <Icon name="help" /> Aide
+        </Link>
       </nav>
     </main>
   )

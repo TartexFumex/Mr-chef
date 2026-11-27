@@ -1,12 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { McClient } from '@mr-chef/mc-client'
 import { errorMessage } from '../lib/mc'
 import { generateSecret, normalizeRelayUrl } from '../lib/relay'
 import { setSettings } from '../lib/settings'
 import { setSecret } from '../lib/vault'
 import { toast } from './toast'
-
-const DOC_URL = 'https://claude.ai/artifact/Vy4h9BV1vHveDj7rEPCTLX'
 
 /** Adresse et secret du relais personnel, avec test de connexion. */
 export function RelayForm({
@@ -57,9 +56,7 @@ export function RelayForm({
     <form className="stack" onSubmit={save}>
       <p className="muted small">
         Le relais est votre petit serveur Cloudflare qui transmet les demandes à Monsieur Cuisine.{' '}
-        <a href={DOC_URL} target="_blank" rel="noreferrer">
-          Guide de mise en place
-        </a>
+        <Link to="/aide#relais">Guide de mise en place</Link>
       </p>
       <label className="field">
         <span>Adresse du relais</span>
