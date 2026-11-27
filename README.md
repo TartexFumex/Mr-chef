@@ -26,23 +26,25 @@ packages/mc-client     Client Monsieur Cuisine (via le relais) et import de sess
 
 ## Démarrer
 
-Prérequis : Node 22, pnpm 10.
+Prérequis : Node 22.12 ou plus et npm 10 ou plus (workspaces npm). Les scripts d'installation
+autorisés (esbuild, workerd, sharp) sont déclarés dans `allowScripts` du `package.json` racine,
+ce qui évite l'avertissement de npm 12.
 
 ```bash
-pnpm install
-pnpm dev            # http://localhost:5173
-pnpm relay:dev      # relais local sur http://localhost:8787 (voir docs)
+npm install
+npm run dev         # http://localhost:5173
+npm run relay:dev   # relais local sur http://localhost:8787 (voir docs)
 ```
 
 ## Vérifications
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test                         # tests unitaires (Vitest)
-pnpm --filter @mr-chef/web exec playwright install chromium   # une fois
-pnpm test:e2e                     # tests de bout en bout (Playwright)
-pnpm build
+npm run lint
+npm run typecheck
+npm test                                        # tests unitaires (Vitest)
+npx -w @mr-chef/web playwright install chromium # une fois
+npm run test:e2e                                # tests de bout en bout (Playwright)
+npm run build
 ```
 
 ## Déploiement

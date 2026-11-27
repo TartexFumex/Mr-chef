@@ -5,5 +5,5 @@
   "type": "module",
   "exports": { ".": "./src/index.ts", "./endpoints": "./src/endpoints.ts" },
   "scripts": { "typecheck": "tsc -p tsconfig.json" },
-  "dependencies": { "@mr-chef/recipe-schema": "workspace:*" }
+  "dependencies": { "@mr-chef/recipe-schema": "*" }
 }

@@ -4,35 +4,42 @@
   "version": "0.1.0",
   "description": "Mr Chef : générateur de recettes par IA pour les robots Monsieur Cuisine (PWA local-first).",
   "type": "module",
-  "packageManager": "pnpm@10.28.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12",
+    "npm": ">=10"
   },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "pnpm --filter @mr-chef/web dev",
-    "build": "pnpm --filter @mr-chef/web build",
-    "preview": "pnpm --filter @mr-chef/web preview",
-    "relay:dev": "pnpm --filter @mr-chef/relay dev",
-    "relay:deploy": "pnpm --filter @mr-chef/relay deploy",
+    "dev": "npm run dev -w @mr-chef/web",
+    "build": "npm run build -w @mr-chef/web",
+    "preview": "npm run preview -w @mr-chef/web",
+    "relay:dev": "npm run dev -w @mr-chef/relay",
+    "relay:deploy": "npm run deploy -w @mr-chef/relay",
     "lint": "eslint .",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
-    "test:e2e": "pnpm --filter @mr-chef/web test:e2e"
+    "test:e2e": "npm run test:e2e -w @mr-chef/web"
   },
   "devDependencies": {
-    "@eslint/js": "9.39.5",
-    "eslint": "9.39.5",
-    "eslint-plugin-react-hooks": "5.2.0",
-    "globals": "16.5.0",
+    "@eslint/js": "10.0.1",
+    "eslint": "10.15.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.74.0",
-    "vitest": "3.2.7"
+    "vitest": "5.1.0"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "workerd",
-      "sharp"
-    ]
+  "overrides": {
+    "workbox-build": {
+      "glob": "14.0.6"
+    }
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "workerd": true,
+    "sharp": true
   }
 }

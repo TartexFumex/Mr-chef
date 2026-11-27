@@ -20,7 +20,7 @@ export default defineConfig({
   ],
   webServer: {
     // En CI, l'application est déjà construite par l'étape précédente.
-    command: process.env.CI ? `pnpm exec vite preview --port ${port} --strictPort` : `pnpm exec vite build && pnpm exec vite preview --port ${port} --strictPort`,
+    command: process.env.CI ? `npx vite preview --port ${port} --strictPort` : `npx vite build && npx vite preview --port ${port} --strictPort`,
     url: `http://localhost:${port}${base}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

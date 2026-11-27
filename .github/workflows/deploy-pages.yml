@@ -19,19 +19,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+          cache: npm
+      - run: npm ci
+      - run: npm test
       - name: Installer Chromium pour les tests de bout en bout
-        run: pnpm --filter @mr-chef/web exec playwright install --with-deps chromium
-      - run: pnpm build
+        run: npx -w @mr-chef/web playwright install --with-deps chromium
+      - run: npm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
-      - run: pnpm test:e2e
+      - run: npm run test:e2e
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
       - uses: actions/configure-pages@v5

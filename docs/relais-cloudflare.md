@@ -30,11 +30,11 @@ Le plan gratuit de Cloudflare suffit largement (100 000 requêtes par jour).
 ## Option B : déploiement depuis votre ordinateur
 
 ```bash
-pnpm install
+npm install
 cd apps/relay
-pnpm wrangler login
-pnpm wrangler secret put RELAY_SHARED_SECRET     # collez le secret généré dans Mr Chef
-pnpm wrangler deploy --var ALLOWED_ORIGIN:https://<compte>.github.io
+npx wrangler login
+npx wrangler secret put RELAY_SHARED_SECRET     # collez le secret généré dans Mr Chef
+npx wrangler deploy --var ALLOWED_ORIGIN:https://<compte>.github.io
 ```
 
 ## Vérifier
@@ -48,8 +48,8 @@ pnpm wrangler deploy --var ALLOWED_ORIGIN:https://<compte>.github.io
 
 ```bash
 cp apps/relay/.dev.vars.example apps/relay/.dev.vars   # puis changez le secret
-pnpm relay:dev                                          # http://localhost:8787
-pnpm dev                                                # http://localhost:5173
+npm run relay:dev                                         # http://localhost:8787
+npm run dev                                            # http://localhost:5173
 ```
 
 `wrangler.toml` autorise `http://localhost:5173` par défaut.
