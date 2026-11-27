@@ -1,66 +1,72 @@
 # Mr Chef
 
-Application web installable (PWA), locale d'abord, qui génère des recettes avec l'IA de votre choix
-(Mistral, OpenAI ou Claude), vous laisse les retoucher dans un éditeur visuel, puis les publie sur
-votre compte Monsieur Cuisine pour les retrouver sur votre robot (Smart, Compact, Connect, 4.0, Édition Plus).
+An installable, local-first web app (PWA) that generates recipes with the AI of your choice
+(Mistral, OpenAI or Claude), lets you polish them in a visual editor, then publishes them to
+your Monsieur Cuisine account so they show up on your robot (Smart, Compact, Connect, 4.0, Édition Plus).
 
-## Fonctionnement
+The technical brief behind the project is in [docs/brief.md](docs/brief.md).
 
-- **Local d'abord** : recettes, photos et réglages vivent dans IndexedDB ; l'app fonctionne hors ligne
-  et met en file les publications jusqu'au retour du réseau.
-- **IA** : appel direct au fournisseur depuis le navigateur avec votre clé (chiffrée sur l'appareil),
-  sortie structurée par JSON Schema, puis ajustement automatique aux programmes du robot choisi.
-- **Monsieur Cuisine** : passage par votre relais Cloudflare personnel (voir
-  [docs/relais-cloudflare.md](docs/relais-cloudflare.md)) avec la session collée depuis le site.
-- **États de synchronisation** : *Locale*, *Publiée*, *Désynchronisée*, dérivés d'une empreinte SHA-256
-  de la recette.
-- **Français et anglais** : langue du navigateur par défaut, modifiable dans les Paramètres
-  (textes dans `apps/web/src/i18n`). En anglais, le prompt par défaut demande des recettes en anglais.
-- **Installation** : sur téléphone, Mr Chef propose de s'installer sur l'écran d'accueil (bouton sur Android,
-  marche à suivre sur iPhone) ; l'invitation écartée ne revient pas avant 90 jours.
+## How it works
 
-## Structure
+- **Local first**: recipes, photos and settings live in IndexedDB; the app works offline
+  and queues publications until the network is back.
+- **AI**: direct calls from the browser to the provider with your key (encrypted on the device),
+  output constrained by a JSON Schema, then automatically fitted to the chosen robot's programs.
+- **Monsieur Cuisine**: goes through a Cloudflare relay, either the site's public relay or your own
+  (see [docs/cloudflare-relay.md](docs/cloudflare-relay.md)), with the session pasted from the website.
+- **Sync states**: *Local*, *Published*, *Out of sync*, derived from a SHA-256 fingerprint of the recipe.
+- **French and English**: browser language by default, can be changed in Settings
+  (texts in `apps/web/src/i18n`). In English, the default prompt asks for recipes in English.
+- **Device transfer**: Settings › Transfer to another device creates an encrypted QR code
+  (AI keys, relay, Monsieur Cuisine session, preferences) unlocked by a passphrase shown separately.
+- **Install**: on a phone, Mr Chef offers to install itself on the home screen (button on Android,
+  instructions on iPhone); once dismissed, the suggestion does not come back for 90 days.
+
+## Layout
 
 ```
-apps/web               PWA React 19 + Vite (interface, base Dexie, coffre, IA, synchro)
-apps/relay             Cloudflare Worker sans état vers monsieur-cuisine.com
-packages/recipe-schema Schéma Zod, profils robots, schéma IA, mapping Monsieur Cuisine
-packages/mc-client     Client Monsieur Cuisine (via le relais) et import de session
+apps/web               React 19 + Vite PWA (UI, Dexie database, vault, AI, sync, i18n)
+apps/relay             Stateless Cloudflare Worker to monsieur-cuisine.com
+packages/recipe-schema Zod schema, robot profiles, AI schema and prompts, Monsieur Cuisine mapping
+packages/mc-client     Monsieur Cuisine client (through the relay) and session import
 ```
 
-## Démarrer
+## Getting started
 
-Prérequis : Node 22.12 ou plus et npm 10 ou plus (workspaces npm). Les scripts d'installation
-autorisés (esbuild, workerd, sharp) sont déclarés dans `allowScripts` du `package.json` racine,
-ce qui évite l'avertissement de npm 12.
+Requirements: Node 22.12 or later and npm 10 or later (npm workspaces). The install scripts that
+are allowed to run (esbuild, workerd, sharp) are listed in `allowScripts` in the root `package.json`,
+which avoids the npm 12 warning.
 
 ```bash
 npm install
 npm run dev         # http://localhost:5173
-npm run relay:dev   # relais local sur http://localhost:8787 (voir docs)
+npm run relay:dev   # local relay on http://localhost:8787 (see docs)
 ```
 
-## Vérifications
+## Checks
 
 ```bash
 npm run lint
 npm run typecheck
-npm test                                        # tests unitaires (Vitest)
-npx -w @mr-chef/web playwright install chromium # une fois
-npm run test:e2e                                # tests de bout en bout (Playwright)
+npm test                                        # unit tests (Vitest)
+npx -w @mr-chef/web playwright install chromium # once
+npm run test:e2e                                # end-to-end tests (Playwright)
 npm run build
 ```
 
-## Déploiement
+## Deployment
 
-- **Application** : le workflow *Déployer sur GitHub Pages* publie `apps/web/dist` sur GitHub Pages à chaque push
-  sur la branche principale (activez Pages › Source : GitHub Actions).
-- **Relais** : workflow manuel *Déployer le relais* (voir la doc).
+- **App**: the *Déployer sur GitHub Pages* workflow publishes `apps/web/dist` to GitHub Pages on every push
+  to the main branch (enable Pages › Source: GitHub Actions). The `PUBLIC_RELAY_URL` repository variable,
+  when set, makes the public relay the default in the app.
+- **Relay**: the *Déployer le relais* workflow (manual, and on pushes that touch the relay). See the doc.
 
 ## Notes
 
-- Les durées de recette sont en minutes, celles des programmes robot en secondes, comme sur Monsieur Cuisine.
-- Les plages des programmes viennent du swagger du Connect ; pour Smart et Compact elles sont reprises
-  du Connect en attendant une capture réseau de ces modèles (signalé dans l'interface).
-- Une session Monsieur Cuisine dure le temps du cookie WordPress (date lue dans le cookie et affichée dans les Paramètres) ; Mr Chef prévient
-  quand il faut la recoller.
+- Recipe times are in minutes and robot program times in seconds, as on Monsieur Cuisine.
+- Program ranges come from the Connect swagger; for the Smart and Compact they are taken from the
+  Connect until a network capture of those models is available (flagged in the UI).
+- A Monsieur Cuisine session lasts as long as the WordPress cookie (its date is read from the cookie and
+  shown in Settings); Mr Chef tells you when it needs to be pasted again.
+- Data sent to Monsieur Cuisine (units, categories) stays in French whatever the UI language,
+  since those are the values the website expects.
