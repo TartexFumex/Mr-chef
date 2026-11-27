@@ -1,0 +1,8 @@
+{
+  "name": "node-domexception",
+  "version": "1.0.0-native",
+  "description": "Remplace node-domexception (déprécié) par le DOMException natif de Node ≥ 17.",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true
+}
