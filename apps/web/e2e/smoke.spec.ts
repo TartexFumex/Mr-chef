@@ -52,6 +52,19 @@ test('premier lancement, génération, édition et bibliothèque', async ({ page
   await page.getByRole('button', { name: 'Commencer à cuisiner' }).click()
 
   await expect(page.getByRole('heading', { name: 'Mr Chef' })).toBeVisible()
+  // Le champ Portions peut être vidé pendant la saisie, puis il est recalé en quittant le champ.
+  const portions = page.getByRole('spinbutton', { name: 'Portions' })
+  await portions.click()
+  await portions.press('End')
+  await portions.press('Backspace')
+  await expect(portions).toHaveValue('')
+  await portions.pressSequentially('2')
+  await expect(portions).toHaveValue('2')
+  await portions.fill('')
+  await portions.blur()
+  await expect(portions).toHaveValue('1')
+  await portions.fill('4')
+
   await page.getByPlaceholder(/Décrivez vos envies/).fill('Un velouté de potiron pour ce soir')
   await page.getByRole('button', { name: 'Générer la recette' }).click()
 

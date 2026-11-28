@@ -34,6 +34,7 @@ import { publishRecipe, resolveConflict, unpublishRecipe } from '../lib/sync'
 import { useSettings } from '../lib/settings'
 import { db } from '../db/db'
 import { categoryLabel, describeFix, unitLabel, useLang, useT } from '../i18n'
+import { NumberInput } from '../components/NumberInput'
 
 export function Editor() {
   const { id } = useParams()
@@ -229,20 +230,18 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
             </label>
             <label className="field">
               <span>{t.editor.prep}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={0}
                 value={draft.preparationTime}
-                onChange={(e) => patch({ preparationTime: Math.max(0, Number(e.target.value) || 0) })}
+                onChange={(preparationTime) => patch({ preparationTime })}
               />
             </label>
             <label className="field">
               <span>{t.editor.ready}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={0}
                 value={draft.readyInTime}
-                onChange={(e) => patch({ readyInTime: Math.max(0, Number(e.target.value) || 0) })}
+                onChange={(readyInTime) => patch({ readyInTime })}
               />
             </label>
             <label className="field">
@@ -265,11 +264,10 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
           <div className="grid2">
             <label className="field">
               <span>{t.editor.servings}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={1}
                 value={draft.servings.amount}
-                onChange={(e) => patch({ servings: { ...draft.servings, amount: Math.max(1, Number(e.target.value) || 1) } })}
+                onChange={(amount) => patch({ servings: { ...draft.servings, amount } })}
               />
             </label>
             <label className="field">
@@ -473,11 +471,10 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
                 <span>
                   {t.nutrients[n.key] ?? n.label} ({n.unit})
                 </span>
-                <input
-                  type="number"
+                <NumberInput
                   min={0}
                   value={draft.nutrients[n.key]}
-                  onChange={(e) => patch({ nutrients: { ...draft.nutrients, [n.key]: Math.max(0, Number(e.target.value) || 0) } })}
+                  onChange={(v) => patch({ nutrients: { ...draft.nutrients, [n.key]: v } })}
                 />
               </label>
             ))}

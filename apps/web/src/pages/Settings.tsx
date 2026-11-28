@@ -18,6 +18,7 @@ import { countUnpublished, logoutAndWipe } from '../lib/reset'
 import { setSettings, useSettings } from '../lib/settings'
 import { getSecret, useStoredSecretIds } from '../lib/vault'
 import { useLang, useT } from '../i18n'
+import { NumberInput } from '../components/NumberInput'
 
 export function Settings() {
   const settings = useSettings()
@@ -106,12 +107,11 @@ export function Settings() {
             <RobotPicker value={settings.robotId} onChange={(robotId) => void setSettings({ robotId })} />
             <label className="row">
               <span className="grow">{t.settings.defaultServings}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={1}
                 max={20}
                 value={settings.defaultServings}
-                onChange={(e) => void setSettings({ defaultServings: Math.max(1, Math.min(20, Number(e.target.value) || 1)) })}
+                onChange={(defaultServings) => void setSettings({ defaultServings })}
                 style={{ width: 90 }}
               />
             </label>
