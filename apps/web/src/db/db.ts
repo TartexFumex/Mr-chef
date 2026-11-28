@@ -34,6 +34,14 @@ export interface RecipeRecord {
   sync: SyncMeta
   pending: PendingOp
   origin: { provider: ProviderId | 'import' | 'manual'; model: string | null; prompt: string | null }
+  /** Dossier local de rangement (jamais envoyé à Monsieur Cuisine). */
+  folderId?: string | null
+}
+
+export interface FolderRecord {
+  id: string
+  name: string
+  createdAt: number
 }
 
 export interface MediaRecord {
@@ -64,6 +72,7 @@ export class MrChefDb extends Dexie {
   kv!: EntityTable<KvRecord, 'key'>
   secrets!: EntityTable<SecretRecord, 'id'>
   keys!: EntityTable<KeyRecord, 'id'>
+  folders!: EntityTable<FolderRecord, 'id'>
 
   constructor(name = 'mr-chef') {
     super(name)
@@ -74,6 +83,7 @@ export class MrChefDb extends Dexie {
       secrets: 'id',
       keys: 'id',
     })
+    this.version(2).stores({ folders: 'id, name' })
   }
 }
 

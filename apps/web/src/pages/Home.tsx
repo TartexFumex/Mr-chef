@@ -42,7 +42,7 @@ export function Home() {
         robotId: settings!.robotId,
         origin: { provider: res.provider, model: res.model, prompt: wish.trim() },
       })
-      navigate(`/recette/${id}`, { state: { fixes: res.fixes, fresh: true } })
+      navigate(`/recette/${id}/modifier`, { state: { fixes: res.fixes, fresh: true } })
     } catch (err) {
       if (!ctrl.signal.aborted) setError(errorMessage(err))
     } finally {
