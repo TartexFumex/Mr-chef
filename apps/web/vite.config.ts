@@ -12,7 +12,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: false,
-      includeAssets: ['icons/favicon.svg', 'icons/apple-touch-icon.png'],
+      // Changer le nom du dossier d'icônes quand elles changent : Android ne met à jour l'icône installée que si son adresse change.
+      includeAssets: ['icons-v2/favicon.svg', 'icons-v2/apple-touch-icon.png'],
       manifest: {
         id: base,
         name: 'Mr Chef',
@@ -27,10 +28,10 @@ export default defineConfig({
         theme_color: '#1B4332',
         categories: ['food', 'lifestyle'],
         icons: [
-          { src: 'icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'icons-v2/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: 'icons-v2/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icons-v2/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icons-v2/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
