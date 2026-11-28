@@ -8,7 +8,9 @@ architecture, how the app reaches the Lidl account, the visual identity and the 
   No cookie, code or token value from those files is reproduced here.
 - First written on 27 November 2026 (phase 1 brief, validated). This version is updated to match
   the code as built: npm workspaces, public relay, device transfer by QR code, French and English UI,
-  install prompt.
+  install prompt, read-only recipe view and folders.
+- The images in [`docs/brief/`](brief/) come from the phase 1 brief. They show the original design,
+  with French labels, and may differ from the app on details noted next to each one.
 
 ## 0. Decisions at a glance
 
@@ -73,6 +75,11 @@ IndexedDB is the only source of truth. Generating, editing, browsing and deletin
 network. The network is used for two things only: calling the AI and syncing with Monsieur Cuisine.
 A publication requested offline is queued and replayed when the network is back, with an
 "Upload pending" badge on the recipe.
+
+![Architecture: the PWA (screens, AI engine, sync engine, Dexie, vault, service worker, Monsieur Cuisine client) calls the AI providers directly and Monsieur Cuisine through the relay](brief/architecture.png)
+
+*Phase 1 diagram. Since then the relay is a Cloudflare Worker only (no Node variant), public by
+default, and the app is served from GitHub Pages rather than its own domain.*
 
 ### Data model
 
@@ -187,6 +194,10 @@ Monsieur Cuisine account: only paste it into a Mr Chef instance and relay you tr
   untouched local copy replaces it; a recipe gone online goes back to Local. Changed on both sides:
   a **Conflict** badge and an explicit choice (keep mine and publish, or take the online version).
 
+![Sync state machine: Local, Published and Out of sync, with publish, update and unpublish transitions](brief/sync-states.png)
+
+*Phase 1 diagram; the states and transitions match the code. Pending uploads and conflicts are shown as extra badges, not extra states.*
+
 ## 6. Multi-provider AI layer
 
 ```ts
@@ -251,13 +262,29 @@ actions. All text and background pairs below meet WCAG AA.
 | Tomato | `#A8402B` / `#F8E1DA` | Delete, sign out |
 | Forest night | `#0E2219` | Dark theme background |
 
+![Palette swatches with contrast ratios](brief/palette.png)
+
 Typography: **Young Serif** for headings, **Atkinson Hyperlegible Next** for text (each letter stays
 distinct a metre from the screen), **IBM Plex Mono** for robot settings in tabular figures. Fonts are
 self-hosted so the app works offline.
 
+![Typography: Young Serif headings, Atkinson Hyperlegible Next text, IBM Plex Mono settings](brief/typography.png)
+
 Logo: concept A, a chef's hat whose central fold draws a small pine tree (chosen over a bowl with
 steam and a fork-and-leaf medallion). It reads at 16 px and works in monochrome; app icons
 (any, maskable, apple-touch) are generated from the SVG.
+
+![Logo concepts A (chef's hat with pine tree, chosen), B (bowl and steam) and C (fork and leaf medallion)](brief/logo-concepts.png)
+
+![App icon, concept A, at 512 (any and maskable), 192 and 32 px](brief/app-icons.png)
+
+Status badges and empty states:
+
+![Status badges: Local, Published, Out of sync, Conflict](brief/status-badges.png)
+
+![Empty library and offline states](brief/empty-states.png)
+
+*In the app, the state labels are translated (Local, Published, Out of sync, Conflict in English).*
 
 ## 8. Screens
 
@@ -271,14 +298,41 @@ steam and a fork-and-leaf medallion). It reads at 16 px and works in monochrome;
 3. **Editor**: photo, title, description, difficulty, times, robot, servings, categories, ingredient
    groups and steps reorderable by drag and drop, a robot program sheet that only offers what the
    robot accepts, tips, nutrition, and a sync bar (Publish, Update online, Unpublish). Autosave.
-4. **Library**: search, filters by state, Sync button, empty state with shortcuts.
-5. **Settings**: language, AI keys and models per provider, robot and default servings, system
+4. **Recipe view**: opening a recipe from the library shows it read-only (photo, details,
+   ingredients, steps with their robot programs, tips, nutrition) so it cannot be changed by
+   accident; **Edit** opens the editor, whose **Done** button goes back to the view. The recipe's
+   folder is chosen here.
+5. **Library**: search, filters by state and by folder (remembered), folder management (create,
+   rename, delete; recipes of a deleted folder move to "No folder"), Sync button, empty state with
+   shortcuts. Folders are local only and never sent to Monsieur Cuisine.
+6. **Settings**: language, AI keys and models per provider, robot and default servings, system
    prompt, relay, transfer to another device, Monsieur Cuisine account, and sign-out with a warning
    that lists unpublished recipes that would be lost.
-6. **Import**: scan the QR code or paste the link, type the passphrase, review the contents, import.
-7. **Help**: how it works, relay setup (public relay, own relay three ways, admin notes), session,
+7. **Import**: scan the QR code or paste the link, type the passphrase, review the contents, import.
+8. **Help**: how it works, relay setup (public relay, own relay three ways, admin notes), session,
    AI keys, device transfer, installing the app, troubleshooting, security. Available in French and
    English.
+
+### Phase 1 wireframes
+
+Low-fidelity phone mockups from the original brief, in French. The app followed them closely; the
+main differences are noted under each one.
+
+![Onboarding wireframes: welcome, Monsieur Cuisine connection, robot choice, AI key](brief/wireframes-onboarding.png)
+
+*Onboarding. The built version has four steps (relay first) instead of three.*
+
+![Home wireframes: wish field, loading state, error state](brief/wireframes-home.png)
+
+*Home and generation.*
+
+![Editor wireframes: Local, Published and Out of sync states, program sheet, publishing progress](brief/wireframes-editor.png)
+
+*Editor and sync. A read-only view now sits in front of the editor.*
+
+![Library and settings wireframes, sign-out warning](brief/wireframes-library-settings.png)
+
+*Library and Settings. Folders and language settings were added later.*
 
 ## 9. Still open
 
