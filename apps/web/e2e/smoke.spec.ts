@@ -184,6 +184,61 @@ test('transfert de configuration par QR code chiffré vers un nouvel appareil', 
   await other.close()
 })
 
+test('retouche par IA : petit carré d’attente, puis choix entre ancienne et nouvelle version', async ({ page }) => {
+  await mockMistral(page)
+  await page.goto('./#/onboarding')
+  await page.getByRole('button', { name: /Passer : je publierai plus tard/ }).click()
+  await page.getByRole('button', { name: /Passer : recettes en local seulement/ }).click()
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByLabel(/Clé API Mistral/).fill('test-key-123456')
+  await page.getByRole('button', { name: 'Vérifier et enregistrer' }).click()
+  await page.getByRole('button', { name: 'Commencer à cuisiner' }).click()
+  await page.getByPlaceholder(/Décrivez vos envies/).fill('Un velouté de potiron')
+  await page.getByRole('button', { name: 'Générer la recette' }).click()
+  await page.getByRole('link', { name: 'Terminé' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: AI_RECIPE.title })).toBeVisible()
+
+  // La révision reçoit la recette actuelle et la demande ; la réponse est retenue pour voir l'attente.
+  const revised = { ...AI_RECIPE, title: 'Velouté de potiron épicé' }
+  let release!: () => void
+  const held = new Promise<void>((r) => (release = r))
+  let sent = ''
+  await page.unroute('https://api.mistral.ai/v1/chat/completions')
+  await page.route('https://api.mistral.ai/v1/chat/completions', async (r) => {
+    sent = r.request().postData() ?? ''
+    await held
+    await r.fulfill({ json: { choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(revised) } }] } })
+  })
+
+  await page.getByRole('button', { name: 'Retoucher avec l’IA' }).click()
+  await page.getByLabel('Que voulez-vous changer ?').fill('Plus épicé')
+  await page.getByRole('button', { name: 'Régénérer' }).click()
+  await expect(page.locator('.revise-square .spinner')).toBeVisible()
+  // La recette actuelle reste affichée pendant la génération.
+  await expect(page.getByRole('heading', { level: 2, name: AI_RECIPE.title })).toBeVisible()
+  await expect.poll(() => sent).toContain('Plus épicé')
+  expect(sent).toContain(AI_RECIPE.title)
+  if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/pending-${test.info().project.name}.png` })
+  release()
+
+  await expect(page.getByText('Nouvelle version proposée')).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: revised.title })).toBeVisible()
+  if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/choice-${test.info().project.name}.png` })
+  await page.getByRole('button', { name: 'Actuelle' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: AI_RECIPE.title })).toBeVisible()
+  await page.getByRole('button', { name: 'Garder l’ancienne' }).click()
+  await expect(page.getByText('Nouvelle version proposée')).toHaveCount(0)
+  await expect(page.getByRole('heading', { level: 2, name: AI_RECIPE.title })).toBeVisible()
+
+  // Deuxième essai, cette fois on remplace.
+  await page.getByRole('button', { name: 'Retoucher avec l’IA' }).click()
+  await page.getByRole('button', { name: 'Régénérer' }).click()
+  await page.getByRole('button', { name: 'Remplacer par la nouvelle' }).click()
+  await expect(page.getByText('Recette mise à jour.')).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { level: 2, name: revised.title })).toBeVisible()
+})
+
 test('la page Aide affiche l’origine à autoriser pour le relais', async ({ page }) => {
   await page.goto('./#/aide')
   await expect(page.getByRole('heading', { name: 'Installer le relais' })).toBeVisible()
