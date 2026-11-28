@@ -65,7 +65,7 @@ test('premier lancement, génération, édition et bibliothèque', async ({ page
   await expect(portions).toHaveValue('1')
   await portions.fill('4')
 
-  await page.getByPlaceholder(/Décrivez vos envies/).fill('Un velouté de potiron pour ce soir')
+  await page.getByPlaceholder(/Décrivez votre envie/).fill('Un velouté de potiron pour ce soir')
   await page.getByRole('button', { name: 'Générer la recette' }).click()
 
   await expect(page.getByLabel('Titre', { exact: true })).toHaveValue(AI_RECIPE.title)
@@ -193,7 +193,7 @@ test('retouche par IA : petit carré d’attente, puis choix entre ancienne et n
   await page.getByLabel(/Clé API Mistral/).fill('test-key-123456')
   await page.getByRole('button', { name: 'Vérifier et enregistrer' }).click()
   await page.getByRole('button', { name: 'Commencer à cuisiner' }).click()
-  await page.getByPlaceholder(/Décrivez vos envies/).fill('Un velouté de potiron')
+  await page.getByPlaceholder(/Décrivez votre envie/).fill('Un velouté de potiron')
   await page.getByRole('button', { name: 'Générer la recette' }).click()
   await page.getByRole('link', { name: 'Terminé' }).click()
   await expect(page.getByRole('heading', { level: 2, name: AI_RECIPE.title })).toBeVisible()
@@ -273,7 +273,7 @@ test('changer de robot après la génération adapte les programmes', async ({ p
   await page.getByRole('button', { name: 'Vérifier et enregistrer' }).click()
   await page.getByRole('button', { name: 'Commencer à cuisiner' }).click()
 
-  await page.getByPlaceholder(/Décrivez vos envies/).fill('Un velouté')
+  await page.getByPlaceholder(/Décrivez votre envie/).fill('Un velouté')
   await page.getByRole('button', { name: 'Générer la recette' }).click()
   const robot = page.locator('label.field', { has: page.getByText('Robot', { exact: true }) }).locator('select')
   await expect(robot).toHaveValue('compact')

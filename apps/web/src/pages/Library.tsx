@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { emptyRecipe } from '@mr-chef/recipe-schema'
 import { useOnline } from '../components/Banners'
+import { ChefSays } from '../components/Chef'
 import { Icon } from '../components/Icon'
 import { StatusBadge } from '../components/StatusBadge'
 import { toast, toastError } from '../components/toast'
@@ -122,8 +123,8 @@ export function Library() {
           ))}
         </div>
         {recipes && recipes.length === 0 ? (
-          <div className="card stack" style={{ textAlign: 'center' }}>
-            <p>{t.library.empty}</p>
+          <div className="card stack">
+            <ChefSays>{t.chef.empty}</ChefSays>
             <div className="row" style={{ justifyContent: 'center' }}>
               <Link className="btn primary" to="/">
                 <Icon name="sparkle" /> {t.library.generateOne}

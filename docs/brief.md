@@ -274,9 +274,13 @@ self-hosted so the app works offline.
 
 ![Typography: Young Serif headings, Atkinson Hyperlegible Next text, IBM Plex Mono settings](brief/typography.png)
 
-Logo: concept A, a chef's hat whose central fold draws a small pine tree (chosen over a bowl with
-steam and a fork-and-leaf medallion). It reads at 16 px and works in monochrome; app icons
-(any, maskable, apple-touch) are generated from the SVG.
+Logo and mascot: **Gaston**, a small cooking robot wearing a chef's hat, whose screen is its face. He
+talks to the user in short chef-like lines (home greeting, generation progress, errors, empty library);
+the lines live in the i18n dictionaries under `chef`. The home screen is a conversation: Gaston asks,
+quick ideas fill the field, the field sits at the bottom. App icons are generated from the SVG
+(`npm run icons -w @mr-chef/web`).
+
+*The images below show the original concept A and are kept for history.*
 
 ![Logo concepts A (chef's hat with pine tree, chosen), B (bowl and steam) and C (fork and leaf medallion)](brief/logo-concepts.png)
 
