@@ -24,6 +24,7 @@ import { ModeEditor } from '../components/ModeEditor'
 import { SortableList } from '../components/Sortable'
 import { StatusBadge } from '../components/StatusBadge'
 import { toast, toastError } from '../components/toast'
+import { TagInput } from '../components/TagInput'
 import { TopBar } from '../components/TopBar'
 import type { RecipeRecord } from '../db/db'
 import { modeSummary, relativeTime } from '../lib/format'
@@ -481,6 +482,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
               </label>
             ))}
           </div>
+          <TagInput recipeId={rec.id} tags={rec.tags ?? []} />
           {rec.origin.prompt && (
             <p className="muted small">
               {t.editor.generatedBy(rec.origin.model ?? '', rec.origin.prompt)}

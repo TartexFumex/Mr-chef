@@ -1,6 +1,5 @@
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { CATEGORIES, COMPLEXITIES, NUTRIENTS, getRobot } from '@mr-chef/recipe-schema'
-import { FolderPicker } from '../components/FolderPicker'
 import { Icon } from '../components/Icon'
 import { StatusBadge } from '../components/StatusBadge'
 import { TopBar } from '../components/TopBar'
@@ -31,6 +30,7 @@ export function RecipeView() {
 function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
   const t = useT()
   const imageUrl = useImageUrl(rec.imageId)
+  const navigate = useNavigate()
   const r = rec.recipe
   const robot = getRobot(rec.robotId)
   const complexity = COMPLEXITIES.find((c) => c.key === r.complexity)
@@ -78,10 +78,7 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
           </div>
         )}
 
-        <div className="row" style={{ marginTop: 16, alignItems: 'flex-end' }}>
-          <div className="grow" style={{ minWidth: 180 }}>
-            <FolderPicker recipeId={rec.id} folderId={rec.folderId ?? null} />
-          </div>
+        <div className="row end" style={{ marginTop: 16 }}>
           <Link to={editUrl} className="btn primary">
             <Icon name="edit" /> {t.view.edit}
           </Link>
@@ -148,6 +145,25 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
                     {r.nutrients[n.key]} {n.unit}
                   </strong>
                 </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {(rec.tags ?? []).length > 0 && (
+          <section className="section">
+            <h2>{t.tags.label}</h2>
+            <div className="chips">
+              {rec.tags!.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className="chip"
+                  title={t.tags.searchFor(tag)}
+                  onClick={() => navigate('/recettes', { state: { tag } })}
+                >
+                  {tag}
+                </button>
               ))}
             </div>
           </section>
