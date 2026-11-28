@@ -3,7 +3,7 @@ import { chromium } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
-const dir = fileURLToPath(new URL('../public/icons/', import.meta.url))
+const dir = fileURLToPath(new URL('../public/icons-v2/', import.meta.url))
 const jobs = [
   ['icon.svg', 'icon-192.png', 192],
   ['icon.svg', 'icon-512.png', 512],
