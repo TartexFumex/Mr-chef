@@ -1,18 +1,22 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { getRobot } from '@mr-chef/recipe-schema'
+import { ChefSays, pick } from '../components/Chef'
 import { Icon } from '../components/Icon'
 import { InstallPrompt } from '../components/InstallPrompt'
-import { Logo } from '../components/Logo'
+import { NumberInput } from '../components/NumberInput'
+import { StatusBadge } from '../components/StatusBadge'
+import { useOnline } from '../components/Banners'
 import { generateRecipe, PROVIDERS } from '../lib/ai'
 import { errorMessage } from '../lib/mc'
-import { createRecipeRecord } from '../lib/recipes'
+import { createRecipeRecord, useRecipes } from '../lib/recipes'
 import { useSettings } from '../lib/settings'
-import { useOnline } from '../components/Banners'
 import { useLang, useT } from '../i18n'
-import { NumberInput } from '../components/NumberInput'
 
+/** Accueil en conversation : Gaston pose la question, on répond dans le champ en bas. */
 export function Home() {
   const settings = useSettings()
+  const recipes = useRecipes()
   const t = useT()
   const lang = useLang()
   const navigate = useNavigate()
@@ -21,16 +25,30 @@ export function Home() {
   const [servings, setServings] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hello] = useState(() => pick(t.chef.hello))
+  const [line, setLine] = useState(0)
   const abort = useRef<AbortController | null>(null)
+  const input = useRef<HTMLTextAreaElement>(null)
+
+  // Pendant la génération, Gaston enchaîne ses répliques.
+  useEffect(() => {
+    if (!busy) return
+    const id = window.setInterval(() => setLine((n) => n + 1), 3000)
+    return () => window.clearInterval(id)
+  }, [busy])
+
+  const recent = useMemo(() => [...(recipes ?? [])].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 3), [recipes])
 
   if (!settings) return null
   const portions = servings ?? settings.defaultServings
   const provider = settings.activeProvider ? PROVIDERS[settings.activeProvider] : null
   const model = settings.activeProvider ? (settings.models[settings.activeProvider] ?? provider?.defaultModels[0]?.label) : null
+  const robot = getRobot(settings.robotId).name.replace(/^Monsieur Cuisine\s+/, '')
 
   async function generate(e: React.FormEvent) {
     e.preventDefault()
     if (!wish.trim()) return
+    setLine(0)
     setBusy(true)
     setError(null)
     const ctrl = new AbortController()
@@ -52,71 +70,111 @@ export function Home() {
     }
   }
 
+  function applyIdea(idea: string) {
+    setWish(idea)
+    input.current?.focus()
+  }
+
   return (
     <main className="main home">
-      <Logo size={96} className="logo" />
-      <h1>Mr Chef</h1>
+      <header className="home-bar">
+        <h1>Mr Chef</h1>
+        <Link to="/aide" className="icon-btn" aria-label={t.nav.help}>
+          <Icon name="help" />
+        </Link>
+        <Link to="/parametres" className="icon-btn" aria-label={t.nav.settings}>
+          <Icon name="settings" />
+        </Link>
+      </header>
+
       {busy ? (
-        <div className="loading" role="status" aria-live="polite">
-          <div className="spinner" aria-hidden />
-          <p>
-            <strong>{t.home.thinking}</strong>
-            <br />
-            <span className="muted small">
-              {t.home.duration(provider?.label ?? '', model ?? '')}
-            </span>
-          </p>
-          <button type="button" className="btn" onClick={() => abort.current?.abort()}>
-            {t.common.cancel}
-          </button>
+        <div className="stack" role="status">
+          <ChefSays live>{t.chef.cooking[line % t.chef.cooking.length]}</ChefSays>
+          <div className="home-wait">
+            <div className="spinner" aria-hidden />
+            <span className="muted small">{t.home.duration(provider?.label ?? '', model ?? '')}</span>
+            <button type="button" className="btn" onClick={() => abort.current?.abort()}>
+              {t.common.cancel}
+            </button>
+          </div>
         </div>
       ) : (
-        <form onSubmit={generate} className="stack">
-          <label className="field">
-            <span className="sr-only">{t.home.wishLabel}</span>
-            <textarea
-              value={wish}
-              onChange={(e) => setWish(e.target.value)}
-              placeholder={t.home.placeholder}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void generate(e)
-              }}
-            />
-          </label>
-          <div className="row">
-            <label className="row grow" style={{ gap: 8 }}>
-              <span>{t.home.servings}</span>
-              <NumberInput
-                min={1}
-                max={20}
-                value={portions}
-                onChange={setServings}
-                style={{ width: 80 }}
-              />
-            </label>
-            <span className="muted small">{provider ? provider.label : t.home.noAi}</span>
-          </div>
-          {!online && <p className="notice warn">{t.home.offline}</p>}
-          {error && (
-            <p className="notice error" role="alert">
-              {error}
-            </p>
+        <>
+          {error ? (
+            <ChefSays live>
+              <strong>{t.chef.error}</strong> <span role="alert">{error}</span>
+            </ChefSays>
+          ) : (
+            <ChefSays>{hello}</ChefSays>
           )}
-          <button type="submit" className="btn primary lg block" disabled={!wish.trim() || !online || !provider}>
-            <Icon name="sparkle" /> {t.home.generate}
-          </button>
+          <div className="ideas" role="group" aria-label={t.home.ideasLabel}>
+            {t.home.ideas.map((idea) => (
+              <button key={idea} type="button" className="idea" onClick={() => applyIdea(idea)}>
+                {idea}
+              </button>
+            ))}
+          </div>
+          {recent.length > 0 && (
+            <section className="recent" aria-labelledby="recent-title">
+              <h2 id="recent-title" className="label">
+                {t.home.recent}
+              </h2>
+              <ul>
+                {recent.map((r) => (
+                  <li key={r.id}>
+                    <Link to={`/recette/${r.id}`}>{r.title || t.library.untitled}</Link>
+                    <StatusBadge rec={r} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </>
+      )}
+
+      <div className="grow" />
+
+      {!busy && (
+        <form onSubmit={generate} className="composer">
+          <label className="sr-only" htmlFor="wish">
+            {t.home.wishLabel}
+          </label>
+          <textarea
+            id="wish"
+            ref={input}
+            rows={2}
+            value={wish}
+            onChange={(e) => setWish(e.target.value)}
+            placeholder={t.home.placeholder}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void generate(e)
+            }}
+          />
+          <div className="composer-row">
+            <Link to="/parametres" className="pill on">
+              {robot}
+            </Link>
+            <label className="pill">
+              <NumberInput min={1} max={20} value={portions} onChange={setServings} aria-label={t.home.servings} />
+              <span aria-hidden>{t.home.servingsUnit}</span>
+            </label>
+            <span className="pill">{provider ? provider.label : t.home.noAi}</span>
+            <button
+              type="submit"
+              className="send"
+              aria-label={t.home.generate}
+              title={t.home.generate}
+              disabled={!wish.trim() || !online || !provider}
+            >
+              <Icon name="sparkle" />
+            </button>
+          </div>
+          {!online && <p className="notice warn small">{t.home.offline}</p>}
         </form>
       )}
+
       <nav className="home-links" aria-label={t.home.nav}>
-        <Link to="/recettes" className="btn">
-          <Icon name="book" /> {t.nav.recipes}
-        </Link>
-        <Link to="/parametres" className="btn">
-          <Icon name="settings" /> {t.nav.settings}
-        </Link>
-        <Link to="/aide" className="btn">
-          <Icon name="help" /> {t.nav.help}
-        </Link>
+        <Link to="/recettes">{t.home.allRecipes(recipes?.length ?? 0)}</Link>
       </nav>
       {!busy && <InstallPrompt />}
     </main>
