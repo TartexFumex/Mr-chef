@@ -14,7 +14,8 @@ export function RobotPicker({ value, onChange }: { value: RobotId; onChange: (id
             <strong>{r.name}</strong>
             <br />
             <span className="muted small">
-              {t.robot.programs(r.modes.map((m) => modeText(m.type, lang).label).join(', '))}
+              {t.robot.programs(r.modes.slice(0, 4).map((m) => modeText(m.type, lang).label).join(', '))}
+              {r.modes.length > 4 && t.robot.more(r.modes.length - 4)}
               {!r.verified && t.robot.unverified}
             </span>
           </span>

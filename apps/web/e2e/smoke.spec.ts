@@ -211,9 +211,9 @@ test('retouche par IA : petit carré d’attente, puis choix entre ancienne et n
   })
 
   await page.getByRole('button', { name: 'Retoucher avec l’IA' }).click()
-  await page.getByLabel('Que voulez-vous changer ?').fill('Plus épicé')
+  await page.getByLabel(/Que voulez-vous changer/).fill('Plus épicé')
   await page.getByRole('button', { name: 'Régénérer' }).click()
-  await expect(page.locator('.revise-square .spinner')).toBeVisible()
+  await expect(page.locator('.revise-pending .typing')).toBeVisible()
   // La recette actuelle reste affichée pendant la génération.
   await expect(page.getByRole('heading', { level: 2, name: AI_RECIPE.title })).toBeVisible()
   await expect.poll(() => sent).toContain('Plus épicé')

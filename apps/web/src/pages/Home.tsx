@@ -89,10 +89,11 @@ export function Home() {
 
       {busy ? (
         <div className="stack" role="status">
-          <ChefSays live>{t.chef.cooking[line % t.chef.cooking.length]}</ChefSays>
+          <ChefSays live thinking>
+            {t.chef.cooking[line % t.chef.cooking.length]}
+          </ChefSays>
           <div className="home-wait">
-            <div className="spinner" aria-hidden />
-            <span className="muted small">{t.home.duration(provider?.label ?? '', model ?? '')}</span>
+            <span className="muted small grow">{t.home.duration(provider?.label ?? '', model ?? '')}</span>
             <button type="button" className="btn" onClick={() => abort.current?.abort()}>
               {t.common.cancel}
             </button>

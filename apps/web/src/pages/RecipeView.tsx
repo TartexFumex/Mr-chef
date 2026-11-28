@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { CATEGORIES, COMPLEXITIES, NUTRIENTS, getRobot, type Recipe, type RobotId } from '@mr-chef/recipe-schema'
 import { useOnline } from '../components/Banners'
+import { ChefSays } from '../components/Chef'
 import { Icon } from '../components/Icon'
 import { StatusBadge } from '../components/StatusBadge'
 import { toast, toastError } from '../components/toast'
@@ -48,8 +49,14 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
   const [busy, setBusy] = useState(false)
   const [proposal, setProposal] = useState<GenerationResult | null>(null)
   const [showing, setShowing] = useState<'new' | 'old'>('new')
+  const [line, setLine] = useState(0)
   const abort = useRef<AbortController | null>(null)
   useEffect(() => () => abort.current?.abort(), [])
+  useEffect(() => {
+    if (!busy) return
+    const id = window.setInterval(() => setLine((n) => n + 1), 3000)
+    return () => window.clearInterval(id)
+  }, [busy])
 
   const provider = settings?.activeProvider ? PROVIDERS[settings.activeProvider] : null
   const canRevise = online && !!provider && !busy && !proposal
@@ -60,6 +67,7 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
     e?.preventDefault()
     if (!request.trim() || !canRevise) return
     setAskOpen(false)
+    setLine(0)
     setBusy(true)
     const ctrl = new AbortController()
     abort.current = ctrl
@@ -100,9 +108,10 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
       <main className="main recipe-view">
         {busy && (
           <div className="revise-pending" role="status" aria-live="polite">
-            <div className="revise-square" title={t.revise.thinking}>
-              <div className="spinner sm" aria-hidden />
-              <span className="sr-only">{t.revise.thinking}</span>
+            <div className="revise-wait">
+              <ChefSays size={40} thinking>
+                {t.chef.cooking[line % t.chef.cooking.length]}
+              </ChefSays>
               <button type="button" className="revise-cancel" aria-label={t.revise.cancel} title={t.revise.cancel} onClick={() => abort.current?.abort()}>
                 <Icon name="close" />
               </button>
@@ -111,9 +120,12 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
         )}
 
         {proposal && (
-          <div className="notice info revise-choice stack" role="region" aria-label={t.revise.proposalTitle}>
+          <div className="revise-choice stack" role="region" aria-label={t.revise.proposalTitle}>
+            <ChefSays size={44}>
+              <strong>{t.revise.proposalTitle}.</strong> {t.revise.keepQuestion}
+            </ChefSays>
             <div className="row">
-              <strong className="grow">{t.revise.proposalTitle}</strong>
+              <span className="small muted grow">{t.revise.requested(request.trim())}</span>
               <div className="segmented" role="group" aria-label={t.revise.compare}>
                 <button type="button" aria-pressed={showing === 'new'} onClick={() => setShowing('new')}>
                   {t.revise.showNew}
@@ -123,7 +135,6 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
                 </button>
               </div>
             </div>
-            <p className="small" style={{ margin: 0 }}>{t.revise.requested(request.trim())}</p>
             {proposal.fixes.length > 0 && (
               <details className="small">
                 <summary>{t.editor.adjustments(proposal.fixes.length, robot.name)}</summary>
@@ -182,11 +193,20 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
           }
           below={
             askOpen && canRevise ? (
-              <form className="card stack revise-form" onSubmit={(e) => void revise(e)}>
-                <label className="field">
-                  <span>{t.revise.label}</span>
+              <form className="revise-form stack" onSubmit={(e) => void revise(e)}>
+                <ChefSays size={44}>{t.revise.label}</ChefSays>
+                <div className="ideas" role="group" aria-label={t.home.ideasLabel}>
+                  {t.revise.ideas.map((idea) => (
+                    <button key={idea} type="button" className="idea" onClick={() => setRequest(idea)}>
+                      {idea}
+                    </button>
+                  ))}
+                </div>
+                <div className="composer">
                   <textarea
                     autoFocus
+                    rows={2}
+                    aria-label={t.revise.label}
                     value={request}
                     onChange={(e) => setRequest(e.target.value)}
                     placeholder={t.revise.placeholder}
@@ -194,17 +214,15 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
                       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void revise()
                     }}
                   />
-                </label>
-                <p className="muted small" style={{ margin: 0 }}>
-                  {t.revise.hint(provider?.label ?? '')}
-                </p>
-                <div className="row end">
-                  <button type="button" className="btn" onClick={() => setAskOpen(false)}>
-                    {t.common.cancel}
-                  </button>
-                  <button type="submit" className="btn primary" disabled={!request.trim()}>
-                    <Icon name="sparkle" /> {t.revise.submit}
-                  </button>
+                  <div className="composer-row">
+                    <span className="pill">{provider?.label}</span>
+                    <button type="button" className="btn ghost" style={{ marginLeft: 'auto' }} onClick={() => setAskOpen(false)}>
+                      {t.common.cancel}
+                    </button>
+                    <button type="submit" className="send" style={{ marginLeft: 0 }} aria-label={t.revise.submit} title={t.revise.submit} disabled={!request.trim()}>
+                      <Icon name="sparkle" />
+                    </button>
+                  </div>
                 </div>
               </form>
             ) : null
@@ -276,7 +294,7 @@ function RecipeBody({
         </div>
       )}
 
-      <div className="row end" style={{ marginTop: 16 }}>
+      <div className="view-actions">
         {actions}
       </div>
       {below}
