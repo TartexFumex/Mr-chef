@@ -5,6 +5,7 @@ import {
   COMPLEXITIES,
   fitRecipeToRobot,
   getRobot,
+  iconOf,
   INGREDIENT_UNITS,
   newKey,
   NUTRIENTS,
@@ -20,6 +21,8 @@ import {
 import { useOnline } from '../components/Banners'
 import { Dialog } from '../components/Dialog'
 import { Icon } from '../components/Icon'
+import { IconPicker } from '../components/IconPicker'
+import { RecipeIconArt } from '../components/RecipeIcon'
 import { ModeEditor } from '../components/ModeEditor'
 import { SortableList } from '../components/Sortable'
 import { StatusBadge } from '../components/StatusBadge'
@@ -68,6 +71,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
   const lastSaved = useRef(JSON.stringify(rec.recipe))
   const draftRef = useRef(rec.recipe)
   const [modeStep, setModeStep] = useState<string | null>(null)
+  const [picking, setPicking] = useState(false)
   const [busy, setBusy] = useState<null | 'publish' | 'unpublish'>(null)
   const [confirm, setConfirm] = useState<null | 'unpublish' | 'delete'>(null)
   const [initialFixes, setInitialFixes] = useState<Fix[]>(() => (location.state as { fixes?: Fix[] } | null)?.fixes ?? [])
@@ -209,20 +213,33 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
           </details>
         )}
 
-        <div className="photo" style={{ marginTop: 12 }}>
-          {imageUrl ? <img src={imageUrl} alt="" /> : <span className="muted">{t.editor.noPhoto}</span>}
-          <div className="row">
-            <label className="btn">
-              <Icon name="camera" /> {imageUrl ? t.editor.changePhoto : t.editor.addPhoto}
-              <input type="file" accept="image/*" hidden onChange={(e) => void onPhoto(e.target.files?.[0])} />
-            </label>
-            {imageUrl && (
+        <div className={imageUrl ? 'cover' : 'cover is-icon'}>
+          {imageUrl ? <img src={imageUrl} alt="" /> : <RecipeIconArt recipe={draft} size={88} label />}
+          <div className="cover-actions">
+            {imageUrl ? (
               <button type="button" className="btn" onClick={() => void saveRecipe(rec.id, { imageId: null })}>
-                {t.editor.removePhoto}
+                <Icon name="close" /> {t.editor.removePhoto}
+              </button>
+            ) : (
+              <button type="button" className="btn" onClick={() => setPicking(true)}>
+                <Icon name="edit" /> {t.editor.icon}
               </button>
             )}
+            <label className="btn">
+              <Icon name="camera" /> {t.editor.photo}
+              <input type="file" accept="image/*" hidden onChange={(e) => void onPhoto(e.target.files?.[0])} />
+            </label>
           </div>
         </div>
+        <IconPicker
+          open={picking}
+          current={iconOf(draft).id}
+          onClose={() => setPicking(false)}
+          onPick={(icon) => {
+            setPicking(false)
+            patch({ icon })
+          }}
+        />
 
         <section className="section stack">
           <label className="field">

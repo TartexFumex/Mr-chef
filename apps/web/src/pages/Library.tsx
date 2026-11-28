@@ -4,6 +4,7 @@ import { emptyRecipe } from '@mr-chef/recipe-schema'
 import { useOnline } from '../components/Banners'
 import { ChefSays } from '../components/Chef'
 import { Icon } from '../components/Icon'
+import { RecipeIconArt } from '../components/RecipeIcon'
 import { StatusBadge } from '../components/StatusBadge'
 import { toast, toastError } from '../components/toast'
 import { TopBar } from '../components/TopBar'
@@ -158,7 +159,7 @@ function RecipeItem({ rec }: { rec: RecipeRecord }) {
   return (
     <li className="recipe-item">
       <Link to={`/recette/${rec.id}`} className="row grow" style={{ flexWrap: 'nowrap', gap: 12 }}>
-        {url ? <img className="thumb" src={url} alt="" /> : <span className="thumb" aria-hidden><Icon name="book" /></span>}
+        {url ? <img className="thumb" src={url} alt="" /> : <span className="thumb" aria-hidden><RecipeIconArt recipe={rec.recipe} /></span>}
         <span className="grow">
           <h3>{rec.title || t.library.untitled}</h3>
           <span className="row small muted" style={{ gap: 8 }}>

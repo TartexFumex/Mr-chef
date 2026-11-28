@@ -7,6 +7,7 @@ import {
   robotFromDeviceTypeId,
   toMcPayload,
   type Recipe,
+  guessIcon,
 } from '@mr-chef/recipe-schema'
 import type { McClient } from '@mr-chef/mc-client'
 import { db, emptySync, type RecipeRecord } from '../db/db'
@@ -157,7 +158,9 @@ export async function refreshFromRemote(): Promise<RefreshReport> {
       const local = byRemote.get(summary.id)
       if (local && local.sync.remoteUpdatedAt === (summary.updatedAt ?? null)) continue
       const record = await client.getRecipe(summary.id)
-      const recipe = fromMcRecord(record)
+      // L'icône n'existe pas sur Monsieur Cuisine : devinée à l'import, sinon celle de la recette locale.
+      const fetched = fromMcRecord(record)
+      const recipe = { ...fetched, icon: local?.recipe.icon ?? guessIcon(fetched) }
       const robotId = robotFromDeviceTypeId(record.deviceTypes?.[0]?.id)?.id ?? settings.robotId
 
       if (!local) {
@@ -237,7 +240,7 @@ export async function resolveConflict(id: string, keep: 'local' | 'remote'): Pro
   const rec = await db.recipes.get(id)
   if (!rec?.sync.conflict) return
   if (keep === 'remote') {
-    const recipe = rec.sync.conflict.recipe
+    const recipe = { ...rec.sync.conflict.recipe, icon: rec.recipe.icon }
     const hash = await recipeHash(recipe, rec.robotId, rec.imageId)
     await db.recipes.update(id, {
       recipe,

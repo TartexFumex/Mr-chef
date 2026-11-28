@@ -1,4 +1,5 @@
 import type { AiRecipe } from './ai-schema'
+import { guessIcon, isRecipeIcon } from './icons'
 import { CATEGORIES, INGREDIENT_UNITS, SERVING_UNITS, type IngredientUnit, type ServingUnit } from './reference'
 import { newKey, type DeviceSettings, type Recipe, type Step } from './recipe'
 import { maxSpeedFor, maxTimeFor, modeSpec, type ModeSpec, type Range, type RobotProfile } from './robots'
@@ -146,6 +147,7 @@ export function aiToRecipe(ai: AiRecipe, robot: RobotProfile): { recipe: Recipe;
 
   const draft: Recipe = {
     title: ai.title.trim(),
+    icon: isRecipeIcon(ai.icon) ? ai.icon : guessIcon({ title: ai.title }),
     description: ai.description.trim(),
     hintsAndTips: ai.hintsAndTips.trim(),
     complexity: ai.complexity,
@@ -198,6 +200,7 @@ export function aiToRecipe(ai: AiRecipe, robot: RobotProfile): { recipe: Recipe;
 export function recipeToAi(recipe: Recipe): AiRecipe {
   return {
     title: recipe.title,
+    icon: isRecipeIcon(recipe.icon) ? recipe.icon : guessIcon(recipe),
     description: recipe.description,
     hintsAndTips: recipe.hintsAndTips,
     complexity: recipe.complexity,

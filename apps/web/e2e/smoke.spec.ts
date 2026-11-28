@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 const AI_RECIPE = {
   title: 'Velouté de potiron au lait de coco',
+  icon: 'pumpkin',
   description: 'Un velouté doux et réconfortant.',
   hintsAndTips: 'Servez avec des graines de courge grillées.',
   complexity: 'facile',
@@ -69,6 +70,11 @@ test('premier lancement, génération, édition et bibliothèque', async ({ page
   await page.getByRole('button', { name: 'Générer la recette' }).click()
 
   await expect(page.getByLabel('Titre', { exact: true })).toHaveValue(AI_RECIPE.title)
+  // Icône choisie par l'IA, puis changée depuis la grille.
+  await expect(page.getByRole('img', { name: 'Courge, potiron' })).toBeVisible()
+  await page.getByRole('button', { name: 'Icône', exact: true }).click()
+  await page.getByRole('dialog').getByRole('option', { name: 'Soupe, potage, velouté' }).click()
+  await expect(page.getByRole('img', { name: 'Soupe, potage, velouté' })).toBeVisible()
   await expect(page.locator('.topbar .badge')).toHaveText('Locale')
   await expect(page.getByText(/ajustement/)).toBeVisible()
   await expect(page.getByRole('button', { name: /Cuisson personnalisée · 25 min · 100 °C · vit\. 3/ })).toBeVisible()

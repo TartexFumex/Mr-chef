@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { CATEGORIES, COMPLEXITIES, NUTRIENTS, getRobot, type Recipe, type RobotId } from '@mr-chef/recipe-schema'
+import { CATEGORIES, COMPLEXITIES, NUTRIENTS, getRobot, iconOf, type Recipe, type RobotId } from '@mr-chef/recipe-schema'
 import { useOnline } from '../components/Banners'
 import { ChefSays } from '../components/Chef'
 import { Icon } from '../components/Icon'
+import { IconPicker } from '../components/IconPicker'
+import { RecipeIconArt } from '../components/RecipeIcon'
 import { StatusBadge } from '../components/StatusBadge'
 import { toast, toastError } from '../components/toast'
 import { TopBar } from '../components/TopBar'
@@ -50,6 +52,7 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
   const [proposal, setProposal] = useState<GenerationResult | null>(null)
   const [showing, setShowing] = useState<'new' | 'old'>('new')
   const [line, setLine] = useState(0)
+  const [picking, setPicking] = useState(false)
   const abort = useRef<AbortController | null>(null)
   useEffect(() => () => abort.current?.abort(), [])
   useEffect(() => {
@@ -155,9 +158,24 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
           </div>
         )}
 
-        {imageUrl && (
+        {imageUrl ? (
           <div className="photo" style={{ marginTop: 12, borderStyle: 'solid' }}>
             <img src={imageUrl} alt="" />
+          </div>
+        ) : (
+          <div className="view-cover">
+            <button type="button" title={t.editor.pickIcon} aria-label={t.editor.pickIcon} disabled={!!proposal} onClick={() => setPicking(true)}>
+              <RecipeIconArt recipe={shown} size={96} />
+            </button>
+            <IconPicker
+              open={picking}
+              current={iconOf(rec.recipe).id}
+              onClose={() => setPicking(false)}
+              onPick={(icon) => {
+                setPicking(false)
+                void saveRecipe(rec.id, { recipe: { ...rec.recipe, icon } })
+              }}
+            />
           </div>
         )}
 

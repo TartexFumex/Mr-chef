@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { CATEGORIES, INGREDIENT_UNITS, SERVING_UNITS } from './reference'
+import { RECIPE_ICONS, iconChoicesText } from './icons'
 import type { RobotProfile } from './robots'
 
 /**
@@ -28,11 +29,16 @@ export function buildAiJsonSchema(robot: RobotProfile): Record<string, unknown> 
     type: 'object',
     additionalProperties: false,
     required: [
-      'title', 'description', 'hintsAndTips', 'complexity', 'categories', 'servings',
+      'title', 'icon', 'description', 'hintsAndTips', 'complexity', 'categories', 'servings',
       'preparationMinutes', 'totalMinutes', 'nutritionPerServing', 'ingredientGroups', 'steps',
     ],
     properties: {
       title: { type: 'string' },
+      icon: {
+        type: 'string',
+        enum: RECIPE_ICONS.map((i) => i.id),
+        description: `Icon that best illustrates the dish, shown when the recipe has no photo. Pick the closest one: ${iconChoicesText()}`,
+      },
       description: { type: 'string' },
       hintsAndTips: { type: 'string' },
       complexity: { type: 'string', enum: ['facile', 'moyen', 'difficile'] },
@@ -103,6 +109,7 @@ export function buildAiJsonSchema(robot: RobotProfile): Record<string, unknown> 
 /** Validation tolérante de la réponse IA (les plages sont corrigées ensuite). */
 export const AiRecipeSchema = z.object({
   title: z.string().min(1),
+  icon: z.string().nullish().catch(null),
   description: z.string().default(''),
   hintsAndTips: z.string().default(''),
   complexity: z.enum(['facile', 'moyen', 'difficile']).catch('facile'),

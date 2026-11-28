@@ -46,6 +46,8 @@ export type Step = z.infer<typeof StepSchema>
 
 export const RecipeSchema = z.object({
   title: z.string(),
+  /** Icône de la liste RECIPE_ICONS, montrée quand la recette n'a pas de photo (jamais envoyée à Monsieur Cuisine). */
+  icon: z.string().optional(),
   description: z.string(),
   hintsAndTips: z.string(),
   complexity: z.enum(['facile', 'moyen', 'difficile']),
