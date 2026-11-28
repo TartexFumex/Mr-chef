@@ -105,7 +105,7 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
       <TopBar title={shown.title || t.editor.untitled} back="/recettes">
         <StatusBadge rec={rec} />
       </TopBar>
-      <main className="main recipe-view">
+      <main className={proposal ? 'main recipe-view with-bar' : 'main recipe-view'}>
         {busy && (
           <div className="revise-pending" role="status" aria-live="polite">
             <div className="revise-wait">
@@ -120,40 +120,42 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
         )}
 
         {proposal && (
-          <div className="revise-choice stack" role="region" aria-label={t.revise.proposalTitle}>
-            <ChefSays size={44}>
-              <strong>{t.revise.proposalTitle}.</strong> {t.revise.keepQuestion}
-            </ChefSays>
-            <div className="row">
-              <span className="small muted grow">{t.revise.requested(request.trim())}</span>
-              <div className="segmented" role="group" aria-label={t.revise.compare}>
-                <button type="button" aria-pressed={showing === 'new'} onClick={() => setShowing('new')}>
-                  {t.revise.showNew}
+          <>
+            <div className="revise-info small">
+              <span>{t.revise.requested(request.trim())}</span>
+              {proposal.fixes.length > 0 && (
+                <details>
+                  <summary>{t.editor.adjustments(proposal.fixes.length, robot.name)}</summary>
+                  <ul className="fixes">
+                    {proposal.fixes.map((f, i) => (
+                      <li key={i}>{describeFix(f, t, robot.name, lang)}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+            <div className="revise-bar" role="region" aria-label={t.revise.proposalTitle}>
+              <ChefSays size={36}>
+                <strong>{showing === 'new' ? `${t.revise.proposalTitle}.` : t.revise.showingOld}</strong> {t.revise.keepQuestion}
+              </ChefSays>
+              <div className="revise-actions">
+                <button
+                  type="button"
+                  className="btn"
+                  aria-pressed={showing === 'old'}
+                  onClick={() => setShowing(showing === 'new' ? 'old' : 'new')}
+                >
+                  {showing === 'new' ? t.revise.viewOld : t.revise.viewNew}
                 </button>
-                <button type="button" aria-pressed={showing === 'old'} onClick={() => setShowing('old')}>
-                  {t.revise.showOld}
+                <button type="button" className="btn" onClick={reject}>
+                  {t.revise.keepOld}
+                </button>
+                <button type="button" className="btn primary" aria-label={t.revise.replace} onClick={() => void accept()}>
+                  {t.revise.replaceShort}
                 </button>
               </div>
             </div>
-            {proposal.fixes.length > 0 && (
-              <details className="small">
-                <summary>{t.editor.adjustments(proposal.fixes.length, robot.name)}</summary>
-                <ul className="fixes">
-                  {proposal.fixes.map((f, i) => (
-                    <li key={i}>{describeFix(f, t, robot.name, lang)}</li>
-                  ))}
-                </ul>
-              </details>
-            )}
-            <div className="row end">
-              <button type="button" className="btn" onClick={reject}>
-                {t.revise.keepOld}
-              </button>
-              <button type="button" className="btn primary" onClick={() => void accept()}>
-                <Icon name="check" /> {t.revise.replace}
-              </button>
-            </div>
-          </div>
+          </>
         )}
 
         {rec.sync.conflict && (

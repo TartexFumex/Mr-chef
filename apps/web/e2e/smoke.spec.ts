@@ -224,7 +224,7 @@ test('retouche par IA : petit carré d’attente, puis choix entre ancienne et n
   await expect(page.getByText('Nouvelle version proposée')).toBeVisible()
   await expect(page.getByRole('heading', { level: 2, name: revised.title })).toBeVisible()
   if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/choice-${test.info().project.name}.png` })
-  await page.getByRole('button', { name: 'Actuelle' }).click()
+  await page.getByRole('button', { name: 'Voir l’actuelle' }).click()
   await expect(page.getByRole('heading', { level: 2, name: AI_RECIPE.title })).toBeVisible()
   await page.getByRole('button', { name: 'Garder l’ancienne' }).click()
   await expect(page.getByText('Nouvelle version proposée')).toHaveCount(0)
