@@ -203,3 +203,13 @@ ol.howto { padding-left: 22px; } ol.howto li + li { margin-top: 6px; }
 .stack > .tag-suggestions { margin-top: 8px; }
 .stack > .library-list { margin-top: 24px; }
 .tag.small { min-height: 22px; font-size: .75rem; padding: 0 8px; }
+
+/* Retouche par IA : petit carré d'attente posé au-dessus de la recette, sans la masquer */
+.revise-pending { position: sticky; top: 72px; z-index: 6; height: 0; display: flex; justify-content: flex-end; }
+.revise-square { position: relative; width: 64px; height: 64px; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.spinner.sm { width: 28px; height: 28px; border-width: 3px; }
+.revise-cancel { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.revise-cancel svg { width: 14px; height: 14px; }
+.revise-choice { position: sticky; top: 64px; z-index: 6; box-shadow: var(--shadow); margin-bottom: 8px; }
+.revise-form { margin-top: 12px; }
+a.btn[aria-disabled=true] { opacity: .55; pointer-events: none; }
