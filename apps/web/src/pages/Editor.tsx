@@ -70,7 +70,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
   const [modeStep, setModeStep] = useState<string | null>(null)
   const [busy, setBusy] = useState<null | 'publish' | 'unpublish'>(null)
   const [confirm, setConfirm] = useState<null | 'unpublish' | 'delete'>(null)
-  const [initialFixes] = useState<Fix[]>(() => (location.state as { fixes?: Fix[] } | null)?.fixes ?? [])
+  const [initialFixes, setInitialFixes] = useState<Fix[]>(() => (location.state as { fixes?: Fix[] } | null)?.fixes ?? [])
   const imageUrl = useImageUrl(rec.imageId)
   const robot = getRobot(rec.robotId)
   const state = syncStateOf(rec)
@@ -115,6 +115,22 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
     }
   }
   const patch = (p: Partial<Recipe>) => update({ ...draft, ...p })
+
+  /** Change de robot en convertissant les programmes des étapes vers ceux du nouveau modèle. */
+  async function changeRobot(robotId: RobotId) {
+    if (timer.current) {
+      clearTimeout(timer.current)
+      timer.current = null
+    }
+    const target = getRobot(robotId)
+    const { recipe: fitted, fixes } = fitRecipeToRobot(draftRef.current, target)
+    draftRef.current = fitted
+    lastSaved.current = JSON.stringify(fitted)
+    setDraft(fitted)
+    setInitialFixes(fixes)
+    await saveRecipe(rec.id, { recipe: fitted, robotId })
+    toast(fixes.length ? t.editor.robotChangedFixes(target.name, fixes.length) : t.editor.robotChanged(target.name))
+  }
 
   const liveFixes = useMemo(() => fitRecipeToRobot(draft, robot).fixes, [draft, robot])
 
@@ -181,7 +197,7 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
           </div>
         )}
         {initialFixes.length > 0 && (
-          <details className="notice info">
+          <details className="notice info" key={rec.robotId}>
             <summary>
               {t.editor.adjustments(initialFixes.length, robot.name)}
             </summary>
@@ -248,10 +264,8 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
               <span>{t.editor.robot}</span>
               <select
                 value={rec.robotId}
-                onChange={async (e) => {
-                  await flush()
-                  await saveRecipe(rec.id, { robotId: e.target.value as RobotId })
-                }}
+                // La valeur est lue avant tout await : React remet le select contrôlé à l'ancienne valeur entre-temps.
+                onChange={(e) => void changeRobot(e.target.value as RobotId)}
               >
                 {ROBOTS.map((r) => (
                   <option key={r.id} value={r.id}>

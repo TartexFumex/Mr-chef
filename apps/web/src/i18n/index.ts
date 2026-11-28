@@ -75,6 +75,8 @@ export function describeFix(f: Fix, t: Dict, robotName: string, lang: Lang): str
       return prefix + t.fix.weight(v, mode)
     case 'unavailable':
       return prefix + t.fix.unavailable(mode, robotName)
+    case 'replaced':
+      return prefix + t.fix.replaced(mode, modeText(f.to ?? '', lang).label, robotName)
     default:
       return f.message
   }

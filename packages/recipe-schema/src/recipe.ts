@@ -5,7 +5,8 @@ import { INGREDIENT_UNITS, SERVING_UNITS } from './reference'
 export const DeviceSettingsSchema = z.object({
   time: z.number().int().nonnegative().optional(),
   temperature: z.number().int().nonnegative().optional(),
-  speed: z.number().int().positive().optional(),
+  /** Demi-vitesses possibles sur le MC4 (0,5 à 10). */
+  speed: z.number().positive().optional(),
   clockwise: z.boolean().optional(),
   weight: z.number().int().positive().optional(),
 })

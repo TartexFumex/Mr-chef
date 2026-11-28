@@ -1,9 +1,9 @@
 import type { AiRecipe } from './ai-schema'
 import { CATEGORIES, INGREDIENT_UNITS, SERVING_UNITS, type IngredientUnit, type ServingUnit } from './reference'
 import { newKey, type DeviceSettings, type Recipe, type Step } from './recipe'
-import { modeSpec, type ModeSpec, type Range, type RobotProfile } from './robots'
+import { maxSpeedFor, maxTimeFor, modeSpec, type ModeSpec, type Range, type RobotProfile } from './robots'
 
-export type FixKind = 'time' | 'temperature' | 'speed' | 'weight' | 'unavailable'
+export type FixKind = 'time' | 'temperature' | 'speed' | 'weight' | 'unavailable' | 'replaced'
 
 /** Correction appliquée à une étape ; `message` est en français, l'interface traduit à partir des champs. */
 export interface Fix {
@@ -11,15 +11,20 @@ export interface Fix {
   kind: FixKind
   /** Programme concerné (type). */
   mode: string
-  /** Nouvelle valeur après correction (absente pour « unavailable »). */
+  /** Nouvelle valeur après correction (absente pour « unavailable » et « replaced »). */
   value?: number
+  /** Programme de remplacement (« replaced »). */
+  to?: string
   message: string
 }
 
-function clampRange(value: number, range: Range): number {
-  if (range.also?.includes(value)) return value
-  let v = Math.round(value)
-  if (range.step) v = Math.round(v / range.step) * range.step
+/** Ramène une valeur dans la plage : valeur autorisée la plus proche, sinon pas et bornes. */
+export function clampRange(value: number, range: Range): number {
+  if (range.values?.length) {
+    return range.values.reduce((best, v) => (Math.abs(v - value) < Math.abs(best - value) ? v : best), range.values[0]!)
+  }
+  const step = range.step ?? 1
+  const v = Math.round(value / step) * step
   return Math.min(range.max, Math.max(range.min, v))
 }
 
@@ -28,38 +33,59 @@ export function fitSettings(spec: ModeSpec, input: DeviceSettings, fixes: Fix[],
   const out: DeviceSettings = {}
   const note = (kind: FixKind, value: number, message: string) => fixes.push({ stepIndex, kind, mode: spec.type, value, message })
 
-  if (spec.time) {
-    const raw = input.time ?? spec.time.min
-    const v = clampRange(raw, spec.time)
-    if (input.time !== undefined && v !== input.time) note('time', v, `Durée ramenée à ${v} s (${spec.label})`)
-    out.time = v
-  }
+  if (spec.time) out.time = clampRange(input.time ?? spec.time.min, spec.time)
   if (spec.temperature) {
-    const raw = input.temperature ?? 0
-    let v: number
-    if (raw <= 0) v = 0
-    else if (raw < spec.temperature.min) v = spec.temperature.min
-    else v = clampRange(raw, spec.temperature)
-    if (input.temperature !== undefined && v !== input.temperature) note('temperature', v, `Température ramenée à ${v} °C (${spec.label})`)
+    const raw = input.temperature ?? spec.temperature.min
+    const t = spec.temperature
+    // Sous le minimum de chauffe (37 °C) : sans chauffe si le programme le permet.
+    const v = raw <= 0 && (t.values ? t.values.includes(0) : t.min === 0) ? 0 : clampRange(raw, t)
+    if (input.temperature !== undefined && v !== input.temperature) note('temperature', v, `Température ramenée à ${v} °C`)
     out.temperature = v
   }
+  if (spec.clockwise) out.clockwise = input.clockwise ?? false
   if (spec.speed) {
-    const raw = input.speed ?? spec.speed.min
-    let v = clampRange(raw, spec.speed)
-    if (spec.maxSpeedWhenHeating && (out.temperature ?? 0) > 0 && v > spec.maxSpeedWhenHeating) {
-      v = spec.maxSpeedWhenHeating
-    }
-    if (input.speed !== undefined && v !== input.speed) note('speed', v, `Vitesse ramenée à ${v} (${spec.label})`)
+    let v = clampRange(input.speed ?? spec.speed.min, spec.speed)
+    const max = maxSpeedFor(spec, out)
+    if (max !== undefined && v > max) v = max
+    if (input.speed !== undefined && v !== input.speed) note('speed', v, `Vitesse ramenée à ${v}`)
     out.speed = v
   }
-  if (spec.clockwise) out.clockwise = input.clockwise ?? false
+  if (spec.time) {
+    const max = maxTimeFor(spec, out)
+    if (max !== undefined && out.time! > max) out.time = max
+    if (input.time !== undefined && out.time !== input.time) note('time', out.time!, `Durée ramenée à ${out.time} s`)
+  }
   if (spec.weight) {
-    const raw = input.weight ?? spec.weight.min
-    const v = clampRange(raw, spec.weight)
-    if (input.weight !== undefined && v !== input.weight) note('weight', v, `Poids ramené à ${v} g (${spec.label})`)
+    const v = clampRange(input.weight ?? spec.weight.min, spec.weight)
+    if (input.weight !== undefined && v !== input.weight) note('weight', v, `Poids ramené à ${v} g`)
     out.weight = v
   }
   return out
+}
+
+/**
+ * Programme équivalent à essayer quand un robot n'a pas celui d'une étape (changement de
+ * robot, recette importée), avec les réglages à compléter. Essayés dans l'ordre.
+ */
+const FALLBACKS: Record<string, { to: string; settings?: DeviceSettings }[]> = {
+  kneading: [{ to: 'kneadingSolidDough' }],
+  kneadingSolidDough: [{ to: 'kneading' }],
+  kneadingSoftDough: [{ to: 'kneading' }],
+  kneadingLiquidDough: [{ to: 'kneading' }],
+  kneadingProveDough: [{ to: 'fermentation' }, { to: 'customized', settings: { speed: 1, clockwise: true } }],
+  roasting: [{ to: 'roastingGentle' }],
+  roastingGentle: [{ to: 'roasting' }],
+  roastingIntense: [{ to: 'roasting' }],
+  sousVide: [{ to: 'customized', settings: { speed: 1, clockwise: true } }],
+  slowCooking: [{ to: 'customized', settings: { speed: 1, clockwise: true } }],
+  fermentation: [{ to: 'kneadingProveDough' }, { to: 'customized', settings: { speed: 1, clockwise: true } }],
+  heatingUp: [{ to: 'customized', settings: { speed: 1, clockwise: true } }],
+  openCooking: [{ to: 'roasting' }, { to: 'customized', settings: { speed: 1, clockwise: true } }],
+  heatWater: [{ to: 'customized', settings: { speed: 1, time: 600 } }],
+  riceCooking: [{ to: 'customized', settings: { temperature: 100, speed: 1, clockwise: true } }],
+  puree: [{ to: 'customized', settings: { speed: 8 } }],
+  smoothie: [{ to: 'customized', settings: { speed: 10 } }],
+  foodProcessor: [{ to: 'customized', settings: { speed: 5 } }],
 }
 
 /** Vérifie une recette pour un robot donné et renvoie la version conforme et les corrections. */
@@ -67,12 +93,19 @@ export function fitRecipeToRobot(recipe: Recipe, robot: RobotProfile): { recipe:
   const fixes: Fix[] = []
   const steps: Step[] = recipe.steps.map((step, i) => {
     if (!step.mode) return step
-    const spec = modeSpec(robot, step.mode.type)
+    let spec = modeSpec(robot, step.mode.type)
+    let input = step.mode.settings
     if (!spec) {
-      fixes.push({ stepIndex: i, kind: 'unavailable', mode: step.mode.type, message: `Programme « ${step.mode.type} » indisponible sur ${robot.name}, étape gardée sans programme` })
-      return { ...step, mode: null }
+      const alt = FALLBACKS[step.mode.type]?.find((f) => modeSpec(robot, f.to))
+      if (!alt) {
+        fixes.push({ stepIndex: i, kind: 'unavailable', mode: step.mode.type, message: `Programme « ${step.mode.type} » indisponible sur ${robot.name}, étape gardée sans programme` })
+        return { ...step, mode: null }
+      }
+      spec = modeSpec(robot, alt.to)!
+      input = { ...input, ...alt.settings }
+      fixes.push({ stepIndex: i, kind: 'replaced', mode: step.mode.type, to: alt.to, message: `Programme « ${step.mode.type} » remplacé par « ${alt.to} » sur ${robot.name}` })
     }
-    const settings = fitSettings(spec, step.mode.settings, fixes, i)
+    const settings = fitSettings(spec, input, fixes, i)
     const description = spec.requiresDescription && !step.description.trim() ? step.title : step.description
     return { ...step, description, mode: { type: spec.type, settings } }
   })
