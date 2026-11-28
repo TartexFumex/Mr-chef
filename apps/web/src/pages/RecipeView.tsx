@@ -8,7 +8,7 @@ import { StatusBadge } from '../components/StatusBadge'
 import { toast, toastError } from '../components/toast'
 import { TopBar } from '../components/TopBar'
 import type { RecipeRecord } from '../db/db'
-import { categoryLabel, describeFix, unitLabel, useLang, useT } from '../i18n'
+import { categoryLabel, unitLabel, useLang, useT } from '../i18n'
 import { PROVIDERS, reviseRecipe, type GenerationResult } from '../lib/ai'
 import { formatMinutes, modeSummary } from '../lib/format'
 import { errorMessage } from '../lib/mc'
@@ -61,7 +61,6 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
   const provider = settings?.activeProvider ? PROVIDERS[settings.activeProvider] : null
   const canRevise = online && !!provider && !busy && !proposal
   const shown = proposal && showing === 'new' ? proposal.recipe : rec.recipe
-  const robot = getRobot(rec.robotId)
 
   async function revise(e?: React.FormEvent) {
     e?.preventDefault()
@@ -121,19 +120,6 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
 
         {proposal && (
           <>
-            <div className="revise-info small">
-              <span>{t.revise.requested(request.trim())}</span>
-              {proposal.fixes.length > 0 && (
-                <details>
-                  <summary>{t.editor.adjustments(proposal.fixes.length, robot.name)}</summary>
-                  <ul className="fixes">
-                    {proposal.fixes.map((f, i) => (
-                      <li key={i}>{describeFix(f, t, robot.name, lang)}</li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-            </div>
             <div className="revise-bar" role="region" aria-label={t.revise.proposalTitle}>
               <ChefSays size={36}>
                 <strong>{showing === 'new' ? `${t.revise.proposalTitle}.` : t.revise.showingOld}</strong> {t.revise.keepQuestion}
@@ -141,17 +127,19 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
               <div className="revise-actions">
                 <button
                   type="button"
-                  className="btn"
+                  className="btn icon-only"
                   aria-pressed={showing === 'old'}
+                  aria-label={showing === 'new' ? t.revise.viewOld : t.revise.viewNew}
+                  title={showing === 'new' ? t.revise.viewOld : t.revise.viewNew}
                   onClick={() => setShowing(showing === 'new' ? 'old' : 'new')}
                 >
-                  {showing === 'new' ? t.revise.viewOld : t.revise.viewNew}
+                  <Icon name="eye" />
                 </button>
-                <button type="button" className="btn" onClick={reject}>
-                  {t.revise.keepOld}
+                <button type="button" className="btn" aria-label={t.revise.keepOld} onClick={reject}>
+                  <Icon name="close" /> {t.revise.no}
                 </button>
                 <button type="button" className="btn primary" aria-label={t.revise.replace} onClick={() => void accept()}>
-                  {t.revise.replaceShort}
+                  <Icon name="check" /> {t.revise.yes}
                 </button>
               </div>
             </div>
