@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import {
   CATEGORIES,
   COMPLEXITIES,
@@ -156,8 +156,11 @@ function EditorLoaded({ rec }: { rec: RecipeRecord }) {
 
   return (
     <>
-      <TopBar title={draft.title || t.editor.untitled} back="/recettes">
+      <TopBar title={draft.title || t.editor.untitled} back={`/recette/${rec.id}`}>
         <StatusBadge rec={rec} />
+        <Link to={`/recette/${rec.id}`} className="btn primary">
+          <Icon name="check" /> {t.editor.done}
+        </Link>
       </TopBar>
       <main className="main">
         {rec.sync.conflict && (

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { emptyRecipe } from '@mr-chef/recipe-schema'
 import { useOnline } from '../components/Banners'
+import { FolderManager } from '../components/FolderManager'
 import { Icon } from '../components/Icon'
 import { StatusBadge } from '../components/StatusBadge'
 import { toast, toastError } from '../components/toast'
@@ -10,7 +11,8 @@ import type { RecipeRecord } from '../db/db'
 import { formatMinutes, relativeTime } from '../lib/format'
 import { errorMessage, hasRelay } from '../lib/mc'
 import { createRecipeRecord, syncStateOf, useImageUrl, useRecipes } from '../lib/recipes'
-import { useSettings } from '../lib/settings'
+import { moveRecipe, NO_FOLDER, useFolders } from '../lib/folders'
+import { setSettings, useSettings } from '../lib/settings'
 import { processPendingQueue, refreshFromRemote } from '../lib/sync'
 import { useT } from '../i18n'
 
@@ -26,6 +28,18 @@ export function Library() {
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
   const [refreshing, setRefreshing] = useState(false)
+  const [managing, setManaging] = useState(false)
+  const folders = useFolders() ?? []
+  const folderNames = new Map(folders.map((f) => [f.id, f.name]))
+  const folderOf = (r: RecipeRecord) => (r.folderId && folderNames.has(r.folderId) ? r.folderId : null)
+  const counts = new Map<string, number>()
+  for (const r of recipes ?? []) {
+    const f = folderOf(r)
+    if (f) counts.set(f, (counts.get(f) ?? 0) + 1)
+  }
+  const stored = settings?.libraryFolder ?? null
+  const folder = stored === NO_FOLDER || (stored && folderNames.has(stored)) ? stored : null
+  const chooseFolder = (value: string | null) => void setSettings({ libraryFolder: value })
 
   async function refresh() {
     setRefreshing(true)
@@ -53,12 +67,15 @@ export function Library() {
       robotId: settings!.robotId,
       origin: { provider: 'manual', model: null, prompt: null },
     })
-    navigate(`/recette/${id}`)
+    if (folder && folder !== NO_FOLDER) await moveRecipe(id, folder)
+    navigate(`/recette/${id}/modifier`)
   }
 
   const q = query.trim().toLowerCase()
   const shown = (recipes ?? []).filter((r) => {
     if (q && !r.title.toLowerCase().includes(q)) return false
+    if (folder === NO_FOLDER && folderOf(r)) return false
+    if (folder && folder !== NO_FOLDER && folderOf(r) !== folder) return false
     return filter === 'all' || syncStateOf(r) === filter
   })
 
@@ -77,6 +94,26 @@ export function Library() {
       </TopBar>
       <main className="main stack">
         <input type="search" placeholder={t.library.search} aria-label={t.library.searchLabel} value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div className="chips folder-chips" role="group" aria-label={t.folders.filter}>
+          {folders.length > 0 && (
+            <>
+              <button type="button" className="chip" aria-pressed={folder === null} onClick={() => chooseFolder(null)}>
+                {t.folders.all}
+              </button>
+              {folders.map((f) => (
+                <button key={f.id} type="button" className="chip" aria-pressed={folder === f.id} onClick={() => chooseFolder(f.id)}>
+                  <Icon name="folder" /> {f.name} <span className="muted small">{counts.get(f.id) ?? 0}</span>
+                </button>
+              ))}
+              <button type="button" className="chip" aria-pressed={folder === NO_FOLDER} onClick={() => chooseFolder(NO_FOLDER)}>
+                {t.folders.none}
+              </button>
+            </>
+          )}
+          <button type="button" className="btn ghost" onClick={() => setManaging(true)}>
+            <Icon name="folder" /> {t.folders.manage}
+          </button>
+        </div>
         <div className="chips" role="group" aria-label={t.library.filter}>
           {FILTERS.map((f) => (
             <button key={f} type="button" className="chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>
@@ -101,7 +138,7 @@ export function Library() {
         ) : (
           <ul className="list">
             {shown.map((r) => (
-              <RecipeItem key={r.id} rec={r} />
+              <RecipeItem key={r.id} rec={r} folderName={folder ? null : (folderNames.get(folderOf(r) ?? '') ?? null)} />
             ))}
             {recipes && shown.length === 0 && <li className="muted">{t.library.noMatch}</li>}
           </ul>
@@ -110,11 +147,12 @@ export function Library() {
           <Icon name="plus" /> {t.library.blank}
         </button>
       </main>
+      <FolderManager open={managing} onClose={() => setManaging(false)} folders={folders} counts={counts} />
     </>
   )
 }
 
-function RecipeItem({ rec }: { rec: RecipeRecord }) {
+function RecipeItem({ rec, folderName }: { rec: RecipeRecord; folderName: string | null }) {
   const url = useImageUrl(rec.imageId)
   const t = useT()
   return (
@@ -127,6 +165,11 @@ function RecipeItem({ rec }: { rec: RecipeRecord }) {
             <StatusBadge rec={rec} />
             <span>{formatMinutes(rec.recipe.readyInTime)}</span>
             <span>{t.library.modified(relativeTime(rec.updatedAt))}</span>
+            {folderName && (
+              <span className="nowrap">
+                <Icon name="folder" /> {folderName}
+              </span>
+            )}
           </span>
         </span>
       </Link>

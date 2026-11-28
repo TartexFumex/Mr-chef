@@ -11,6 +11,7 @@ import { Home } from './pages/Home'
 import { Import } from './pages/Import'
 import { Library } from './pages/Library'
 import { Onboarding } from './pages/Onboarding'
+import { RecipeView } from './pages/RecipeView'
 import { Settings } from './pages/Settings'
 
 /** Redirige vers l'accueil de configuration tant que l'onboarding n'est pas terminé. */
@@ -54,7 +55,8 @@ export function App() {
           <Route path="/aide" element={<Help />} />
           <Route path="/" element={<Guard><Home /></Guard>} />
           <Route path="/recettes" element={<Guard><Library /></Guard>} />
-          <Route path="/recette/:id" element={<Guard><Editor /></Guard>} />
+          <Route path="/recette/:id" element={<Guard><RecipeView /></Guard>} />
+          <Route path="/recette/:id/modifier" element={<Guard><Editor /></Guard>} />
           <Route path="/parametres" element={<Guard><Settings /></Guard>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

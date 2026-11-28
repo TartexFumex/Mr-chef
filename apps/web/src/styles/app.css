@@ -180,3 +180,17 @@ ol.howto { padding-left: 22px; } ol.howto li + li { margin-top: 6px; }
 .help table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .help th, .help td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--line); }
 .toc { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Lecture d'une recette */
+.recipe-view .view-title { font-size: 1.7rem; margin: 16px 0 4px; }
+.recipe-view .view-desc { margin: 0 0 8px; color: var(--ink-2); white-space: pre-line; }
+.view-meta { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--ink-2); font-size: .95rem; }
+.view-meta li + li::before { content: "·"; margin-right: 14px; }
+.tag { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); font-size: .85rem; font-weight: 600; }
+.view-ingredients { list-style: none; padding: 0; margin: 0; }
+.view-ingredients li { display: flex; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.view-ingredients li:last-child { border-bottom: 0; }
+.view-ingredients .qty { min-width: 84px; text-align: right; color: var(--sapin); }
+.view-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.mode-pill.static { cursor: default; }
+.folder-chips .chip { display: inline-flex; align-items: center; gap: 6px; }

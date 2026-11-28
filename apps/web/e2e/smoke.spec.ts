@@ -66,8 +66,30 @@ test('premier lancement, génération, édition et bibliothèque', async ({ page
   await page.getByRole('dialog').getByRole('button', { name: 'Valider' }).click()
   await expect(page.getByRole('button', { name: /Turbo · 8 s/ })).toBeVisible()
 
+  // Retour en lecture seule : plus aucun champ modifiable.
+  await page.getByRole('link', { name: 'Terminé' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: AI_RECIPE.title })).toBeVisible()
+  await expect(page.getByLabel('Titre', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Turbo · 8 s')).toBeVisible()
+
+  // Ranger la recette dans un nouveau dossier depuis la lecture.
+  await page.getByRole('combobox', { name: 'Dossier', exact: true }).selectOption({ label: 'Nouveau dossier…' })
+  await page.getByRole('dialog').getByLabel('Nom du dossier').fill('Soupes')
+  await page.getByRole('dialog').getByRole('button', { name: 'Créer' }).click()
+  await expect(page.getByRole('combobox', { name: 'Dossier', exact: true })).toHaveValue(/.+/)
+
+  // Filtrer la bibliothèque par dossier.
   await page.getByRole('link', { name: 'Retour' }).click()
-  await expect(page.getByRole('heading', { name: AI_RECIPE.title })).toBeVisible()
+  const folders = page.getByRole('group', { name: 'Filtrer par dossier' })
+  await folders.getByRole('button', { name: 'Sans dossier' }).click()
+  await expect(page.getByText('Aucune recette ne correspond.')).toBeVisible()
+  await folders.getByRole('button', { name: /Soupes/ }).click()
+  await page.getByRole('link', { name: new RegExp(AI_RECIPE.title) }).click()
+  await page.getByRole('link', { name: 'Modifier' }).click()
+  await expect(page.getByLabel('Titre', { exact: true })).toHaveValue(AI_RECIPE.title)
+  await page.getByRole('link', { name: 'Retour' }).click()
+  await page.getByRole('link', { name: 'Retour' }).click()
+  await expect(page.getByRole('heading', { name: 'Mes recettes' })).toBeVisible()
 
   await context.setOffline(true)
   await expect(page.getByText(/Hors ligne\./)).toBeVisible()

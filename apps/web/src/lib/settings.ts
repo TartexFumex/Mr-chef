@@ -22,6 +22,8 @@ export interface Settings {
   lang: 'fr' | 'en' | null
   /** Date à laquelle l'invitation à installer l'application a été écartée. */
   installDismissedAt: number | null
+  /** Dossier affiché dans « Mes recettes » : null = tous, NO_FOLDER = sans dossier. */
+  libraryFolder: string | null
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -39,6 +41,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lastRefreshAt: null,
   lang: null,
   installDismissedAt: null,
+  libraryFolder: null,
 }
 
 export async function getSettings(): Promise<Settings> {
