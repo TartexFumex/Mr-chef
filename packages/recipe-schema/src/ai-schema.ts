@@ -19,7 +19,7 @@ export function buildAiJsonSchema(robot: RobotProfile): Record<string, unknown> 
       type: { type: 'string', enum: robot.modes.map((m) => m.type) },
       timeSeconds: nullableInt,
       temperature: nullableInt,
-      speed: nullableInt,
+      speed: { type: ['number', 'null'] },
       reverse: { type: ['boolean', 'null'] },
       weightGrams: nullableInt,
     },

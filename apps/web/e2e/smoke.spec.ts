@@ -261,3 +261,31 @@ test.describe('navigateur en anglais', () => {
     await expect(page.getByRole('heading', { name: 'Set up the relay' })).toBeVisible()
   })
 })
+
+test('changer de robot après la génération adapte les programmes', async ({ page }) => {
+  await mockMistral(page)
+  await page.goto('./#/onboarding')
+  await page.getByRole('button', { name: /Passer : je publierai plus tard/ }).click()
+  await page.getByRole('button', { name: /Passer : recettes en local seulement/ }).click()
+  await page.getByText('Monsieur Cuisine Compact', { exact: true }).click()
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByLabel(/Clé API Mistral/).fill('test-key-123456')
+  await page.getByRole('button', { name: 'Vérifier et enregistrer' }).click()
+  await page.getByRole('button', { name: 'Commencer à cuisiner' }).click()
+
+  await page.getByPlaceholder(/Décrivez votre envie/).fill('Un velouté')
+  await page.getByRole('button', { name: 'Générer la recette' }).click()
+  const robot = page.locator('label.field', { has: page.getByText('Robot', { exact: true }) }).locator('select')
+  await expect(robot).toHaveValue('compact')
+  // Turbo sans durée sur le Compact.
+  await expect(page.getByRole('button', { name: /^Turbo$/ })).toBeVisible()
+
+  await robot.selectOption('smart')
+  await expect(robot).toHaveValue('smart')
+  await expect(page.getByText(/Recette adaptée au Monsieur Cuisine Smart/)).toBeVisible()
+  await expect(page.getByRole('button', { name: /Turbo · 1 s/ })).toBeVisible()
+
+  // Le choix survit au rechargement.
+  await page.reload()
+  await expect(robot).toHaveValue('smart')
+})

@@ -1,0 +1,1950 @@
+{
+ "MC0.5 Compact": {
+  "recipeTitleWordLimit": 86,
+  "recipeDescriptionWordLimit": 240,
+  "stepTitleWordLimit": 80,
+  "stepDescriptionWordLimit": 240,
+  "preparationDurationMin": 1,
+  "preparationDurationMax": 5940,
+  "durationMin": 1,
+  "durationMax": 18000,
+  "deviceModes": [
+   {
+    "name": "kneading",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 45,
+      "max": 90
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "steaming",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 0,
+      "max": 3600
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "roasting",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130
+      ]
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 0,
+      "max": 840
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "scale",
+    "showDescription": true,
+    "label": "targetedWeight",
+    "fields": [
+     {
+      "input": "weight",
+      "min": 1,
+      "max": 3000
+     }
+    ],
+    "beStoredParameters": {
+     "weight": true,
+     "temperature": false,
+     "speed": false,
+     "time": false
+    },
+    "requireDescription": true
+   },
+   {
+    "name": "customized",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       0,
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95,
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130
+      ]
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 5400
+     },
+     {
+      "input": "speed",
+      "min": 1,
+      "max": 10,
+      "lowerBoundary": 0,
+      "upperBoundary": 10,
+      "timeDependentUpperBoundaries": [
+       10,
+       6,
+       3
+      ]
+     },
+     {
+      "input": "direction",
+      "options": [
+       {
+        "label": "turnLeft",
+        "value": true
+       },
+       {
+        "label": "turnRight",
+        "value": false
+       }
+      ]
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "turbo",
+    "showDescription": true,
+    "fields": [
+     {
+      "input": "turbo",
+      "isLite": true
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": false
+    },
+    "requireDescription": true
+   }
+  ]
+ },
+ "MC1.1 Plus": {
+  "recipeTitleWordLimit": 86,
+  "recipeDescriptionWordLimit": 240,
+  "stepDescriptionWordLimit": 240,
+  "preparationDurationMin": 1,
+  "preparationDurationMax": 5940,
+  "durationMin": 1,
+  "durationMax": 18000,
+  "deviceModes": [
+   {
+    "name": "kneading",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 45,
+      "max": 120,
+      "default": 90
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "steaming",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 0,
+      "max": 3600
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "roasting",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature",
+      "min": 0,
+      "max": 130
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 0,
+      "max": 840
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "scale",
+    "showDescription": true,
+    "label": "targetedWeight",
+    "fields": [
+     {
+      "input": "weight",
+      "min": 5,
+      "max": 5000
+     }
+    ],
+    "beStoredParameters": {
+     "weight": true,
+     "temperature": false,
+     "speed": false,
+     "time": false
+    },
+    "requireDescription": true
+   },
+   {
+    "name": "customized",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       0,
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95,
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130
+      ]
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 5940
+     },
+     {
+      "input": "speed",
+      "min": 1,
+      "max": 10,
+      "lowerBoundary": 0,
+      "upperBoundary": 10,
+      "temperatureDependentUpperBoundaries": [
+       10,
+       3
+      ]
+     },
+     {
+      "input": "direction",
+      "options": [
+       {
+        "label": "turnLeft",
+        "value": true
+       },
+       {
+        "label": "turnRight",
+        "value": false
+       }
+      ]
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "turbo",
+    "showDescription": true,
+    "label": "holdFor",
+    "fields": [
+     {
+      "input": "turbo",
+      "time": {
+       "min": 1,
+       "max": 20,
+       "lowerBoundary": 0,
+       "upperBoundary": 20
+      }
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": true
+   }
+  ]
+ },
+ "MC2.0 Connect": {
+  "recipeTitleWordLimit": 86,
+  "recipeDescriptionWordLimit": 240,
+  "stepTitleWordLimit": 80,
+  "stepDescriptionWordLimit": 240,
+  "preparationDurationMin": 1,
+  "preparationDurationMax": 5940,
+  "durationMin": 1,
+  "durationMax": 18000,
+  "deviceModes": [
+   {
+    "name": "kneading",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 45,
+      "max": 120
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "steaming",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 0,
+      "max": 3600
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "roasting",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature",
+      "min": 0,
+      "max": 130
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 0,
+      "max": 840
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "scale",
+    "showDescription": true,
+    "label": "targetedWeight",
+    "fields": [
+     {
+      "input": "weight",
+      "min": 5,
+      "max": 5000
+     }
+    ],
+    "beStoredParameters": {
+     "weight": true,
+     "temperature": false,
+     "speed": false,
+     "time": false
+    },
+    "requireDescription": true
+   },
+   {
+    "name": "customized",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       0,
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95,
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130
+      ]
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 5940
+     },
+     {
+      "input": "speed",
+      "min": 1,
+      "max": 10,
+      "lowerBoundary": 0,
+      "upperBoundary": 10,
+      "temperatureDependentUpperBoundaries": [
+       10,
+       3
+      ]
+     },
+     {
+      "input": "direction",
+      "options": [
+       {
+        "label": "turnLeft",
+        "value": true
+       },
+       {
+        "label": "turnRight",
+        "value": false
+       }
+      ]
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "turbo",
+    "showDescription": true,
+    "label": "holdFor",
+    "fields": [
+     {
+      "input": "turbo",
+      "time": {
+       "min": 1,
+       "max": 20,
+       "lowerBoundary": 0,
+       "upperBoundary": 20
+      }
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": true
+   },
+   {
+    "name": "ramp",
+    "adminOnly": true,
+    "fields": [
+     {
+      "input": "ramp",
+      "speed": {
+       "min": 1,
+       "max": 10,
+       "lowerBoundary": 0,
+       "upperBoundary": 10
+      },
+      "time": {
+       "min": 1,
+       "max": 20,
+       "lowerBoundary": 0,
+       "upperBoundary": 20
+      }
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   }
+  ]
+ },
+ "MC3.0 Smart": {
+  "recipeTitleWordLimit": 86,
+  "recipeDescriptionWordLimit": 240,
+  "stepTitleWordLimit": 80,
+  "stepDescriptionWordLimit": 240,
+  "preparationDurationMin": 1,
+  "preparationDurationMax": 5940,
+  "durationMin": 1,
+  "durationMax": 18000,
+  "deviceModes": [
+   {
+    "name": "kneading",
+    "adminOnly": true,
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 45,
+      "max": 120
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "kneadingSolidDough",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 45,
+      "max": 240
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false,
+    "tips": "kneadingSolidDoughTips",
+    "tooltip": "kneadingSolidDoughTooltip"
+   },
+   {
+    "name": "kneadingSoftDough",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 45,
+      "max": 240
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false,
+    "tips": "kneadingSoftDoughTips",
+    "tooltip": "kneadingSoftDoughTooltip"
+   },
+   {
+    "name": "kneadingLiquidDough",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 45,
+      "max": 360
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false,
+    "tips": "kneadingLiquidDoughTips",
+    "tooltip": "kneadingLiquidDoughTooltip"
+   },
+   {
+    "name": "steaming",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 0,
+      "max": 3600
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "roasting",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       0,
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95,
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130
+      ]
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 0,
+      "max": 840
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "scale",
+    "showDescription": true,
+    "label": "targetedWeight",
+    "fields": [
+     {
+      "input": "weight",
+      "min": 5,
+      "max": 5000
+     }
+    ],
+    "beStoredParameters": {
+     "weight": true,
+     "temperature": false,
+     "speed": false,
+     "time": false
+    },
+    "requireDescription": true
+   },
+   {
+    "name": "customized",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       0,
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95,
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130
+      ]
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 5940
+     },
+     {
+      "input": "speed",
+      "min": 1,
+      "max": 10,
+      "lowerBoundary": 0,
+      "upperBoundary": 10,
+      "temperatureDependentUpperBoundaries": [
+       10,
+       3
+      ]
+     },
+     {
+      "input": "direction",
+      "options": [
+       {
+        "label": "turnLeft",
+        "value": true
+       },
+       {
+        "label": "turnRight",
+        "value": false
+       }
+      ]
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "sousVide",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature",
+      "min": 40,
+      "max": 85
+     },
+     {
+      "input": "time",
+      "type": "minutes",
+      "min": 15,
+      "max": 720
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "slowCooking",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95
+      ]
+     },
+     {
+      "input": "time",
+      "type": "minutes",
+      "min": 15,
+      "max": 480
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "cookingEggs",
+    "fields": [
+     {
+      "input": "egg",
+      "sizeOptions": [
+       "small",
+       "medium",
+       "large"
+      ],
+      "textureOptions": [
+       "soft",
+       "waxySoft",
+       "hard"
+      ],
+      "durationCombinations": {
+       "small": {
+        "soft": 8,
+        "waxySoft": 9,
+        "hard": 15
+       },
+       "medium": {
+        "soft": 10,
+        "waxySoft": 12,
+        "hard": 18
+       },
+       "large": {
+        "soft": 11,
+        "waxySoft": 13,
+        "hard": 18
+       }
+      }
+     }
+    ],
+    "beStoredParameters": null,
+    "requireDescription": false
+   },
+   {
+    "name": "precleaning",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "cleaning",
+      "cleaningOptions": [
+       "short",
+       "long"
+      ],
+      "durationCombinations": {
+       "short": 1.5,
+       "long": 5
+      }
+     }
+    ],
+    "beStoredParameters": null,
+    "requireDescription": false
+   },
+   {
+    "name": "fermentation",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65
+      ]
+     },
+     {
+      "input": "time",
+      "type": "minutes",
+      "min": 30,
+      "max": 720
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "turbo",
+    "showDescription": true,
+    "label": "holdFor",
+    "fields": [
+     {
+      "input": "turbo",
+      "time": {
+       "min": 1,
+       "max": 20,
+       "lowerBoundary": 0,
+       "upperBoundary": 20
+      }
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": true
+   },
+   {
+    "name": "riceCooking",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1200,
+      "max": 2400
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "foodProcessor",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 300
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "ramp",
+    "adminOnly": true,
+    "fields": [
+     {
+      "input": "ramp",
+      "speed": {
+       "min": 1,
+       "max": 10,
+       "lowerBoundary": 0,
+       "upperBoundary": 10
+      },
+      "time": {
+       "min": 1,
+       "max": 20,
+       "lowerBoundary": 0,
+       "upperBoundary": 20
+      }
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "puree",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 30,
+      "max": 120
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "smoothie",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 30,
+      "max": 120
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   }
+  ]
+ },
+ "MC4.0": {
+  "recipeTitleWordLimit": 86,
+  "recipeDescriptionWordLimit": 240,
+  "stepTitleWordLimit": 80,
+  "stepDescriptionWordLimit": 240,
+  "preparationDurationMin": 1,
+  "preparationDurationMax": 5940,
+  "durationMin": 1,
+  "durationMax": 18000,
+  "selectableModules": true,
+  "filterModesBySelectedModules": true,
+  "storeParametersPerModule": true,
+  "separateParameterCards": false,
+  "deviceModes": [
+   {
+    "name": "kneadingSolidDough",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 360,
+      "default": 120
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false,
+    "tips": "kneadingSolidDoughTips",
+    "tooltip": "kneadingSolidDoughTooltip"
+   },
+   {
+    "name": "kneadingSoftDough",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 240,
+      "default": 120
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false,
+    "tips": "kneadingSoftDoughTips",
+    "tooltip": "kneadingSoftDoughTooltip"
+   },
+   {
+    "name": "kneadingLiquidDough",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 600,
+      "default": 120
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false,
+    "tips": "kneadingLiquidDoughTips",
+    "tooltip": "kneadingLiquidDoughTooltip"
+   },
+   {
+    "name": "kneadingProveDough",
+    "displayName": "Proving dough",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       37,
+       38,
+       39,
+       40
+      ],
+      "default": 37
+     },
+     {
+      "input": "time",
+      "type": "minutes",
+      "min": 30,
+      "max": 60,
+      "default": 45
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "steaming",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 3600,
+      "default": 1200
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "roastingGentle",
+    "displayName": "Roast",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130,
+       135,
+       140,
+       145
+      ],
+      "default": 145
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 1200,
+      "default": 420
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "roastingIntense",
+    "displayName": "Intense roast",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130,
+       135,
+       140,
+       145,
+       150,
+       155,
+       160,
+       165
+      ],
+      "default": 165
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 1200,
+      "default": 420
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "scale",
+    "showDescription": true,
+    "supportedModuleCodes": "R",
+    "label": "targetedWeight",
+    "fields": [
+     {
+      "input": "scale-ingredients",
+      "min": 0
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": false
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "customized",
+    "separateParameterCards": true,
+    "supportedModuleCodes": "R",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       0,
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95,
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130
+      ]
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 5999,
+      "constraints": [
+       {
+        "when": {
+         "speed": {
+          "greaterThanOrEqual": 6
+         }
+        },
+        "set": {
+         "max": 600
+        }
+       }
+      ]
+     },
+     {
+      "input": "half-speed",
+      "min": 0.5,
+      "max": 10,
+      "step": 0.5,
+      "lowerBoundary": 0,
+      "upperBoundary": 10,
+      "constraints": [
+       {
+        "when": {
+         "temperature": {
+          "greaterThan": 0
+         }
+        },
+        "set": {
+         "upperBoundary": 4,
+         "max": 4
+        }
+       },
+       {
+        "when": {
+         "reverse": {
+          "equals": true
+         }
+        },
+        "set": {
+         "upperBoundary": 4,
+         "max": 4
+        }
+       }
+      ]
+     },
+     {
+      "input": "direction",
+      "options": "O"
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "sousVide",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature",
+      "min": 40,
+      "max": 85,
+      "default": 40
+     },
+     {
+      "input": "time",
+      "type": "minutes",
+      "min": 1,
+      "max": 720,
+      "default": 120
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "slowCooking",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95
+      ],
+      "default": 90
+     },
+     {
+      "input": "time",
+      "type": "minutes",
+      "min": 1,
+      "max": 480,
+      "default": 360
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "cookingEggs",
+    "supportedModuleCodes": "R",
+    "fields": [
+     {
+      "input": "egg",
+      "sizeOptions": [
+       "small",
+       "medium",
+       "large"
+      ],
+      "textureOptions": [
+       "soft",
+       "waxySoft",
+       "hard"
+      ],
+      "durationCombinations": {
+       "small": {
+        "soft": 8,
+        "waxySoft": 9,
+        "hard": 15
+       },
+       "medium": {
+        "soft": 10,
+        "waxySoft": 12,
+        "hard": 18
+       },
+       "large": {
+        "soft": 11,
+        "waxySoft": 13,
+        "hard": 18
+       }
+      }
+     }
+    ],
+    "beStoredParameters": null,
+    "requireDescription": false
+   },
+   {
+    "name": "precleaning",
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "cleaning",
+      "cleaningOptions": [
+       "short",
+       "dough",
+       "intense"
+      ],
+      "optionTranslationKeys": {
+       "dough": "be29691376da",
+       "intense": "59becbdf2f02"
+      },
+      "showDuration": true,
+      "durationCombinations": {
+       "short": 2,
+       "dough": 5,
+       "intense": 10
+      }
+     }
+    ],
+    "beStoredParameters": null,
+    "requireDescription": false
+   },
+   {
+    "name": "fermentation",
+    "supportedModuleCodes": "R",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70
+      ],
+      "default": 40
+     },
+     {
+      "input": "time",
+      "type": "minutes",
+      "min": 1,
+      "max": 720,
+      "default": 480
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "heatWater",
+    "displayName": "Heat water",
+    "supportedModuleCodes": "R",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95,
+       100
+      ],
+      "default": 100
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": false
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "heatingUp",
+    "displayName": "Heating up",
+    "supportedModuleCodes": "R",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90
+      ],
+      "default": 70
+     },
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 0,
+      "max": 1200,
+      "default": 0
+     },
+     {
+      "input": "half-speed",
+      "min": 0.5,
+      "max": 2,
+      "step": 0.5,
+      "lowerBoundary": 0.5,
+      "upperBoundary": 2,
+      "default": 1
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "openCooking",
+    "displayName": "Open cooking",
+    "supportedModuleCodes": "R",
+    "fields": [
+     {
+      "input": "temperature-step",
+      "steps": [
+       37,
+       40,
+       45,
+       50,
+       55,
+       60,
+       65,
+       70,
+       75,
+       80,
+       85,
+       90,
+       95,
+       100,
+       105,
+       110,
+       115,
+       120,
+       125,
+       130,
+       135,
+       140,
+       145,
+       150,
+       155,
+       160,
+       165
+      ],
+      "default": 100
+     },
+     {
+      "input": "time",
+      "type": "minutes",
+      "min": 1,
+      "max": 120,
+      "default": 15
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": true,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "turbo",
+    "showDescription": true,
+    "separateParameterCards": true,
+    "supportedModuleCodes": "R",
+    "label": "holdFor",
+    "fields": [
+     {
+      "input": "turbo",
+      "time": {
+       "min": 2,
+       "max": 20,
+       "default": 2,
+       "lowerBoundary": 2,
+       "upperBoundary": 20
+      }
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": true
+   },
+   {
+    "name": "foodProcessor",
+    "supportedModuleCodes": [
+     "FOOD_PROCESSOR"
+    ],
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 300,
+      "default": 120
+     },
+     {
+      "input": "half-speed",
+      "min": 1,
+      "max": 6,
+      "step": 0.5,
+      "lowerBoundary": 1,
+      "upperBoundary": 6,
+      "default": 4.5
+     },
+     {
+      "input": "direction",
+      "options": "O",
+      "hidden": true
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "citrusJuicer",
+    "displayName": "Citrus Juicer",
+    "supportedModuleCodes": [
+     "CITRUS_JUICER"
+    ],
+    "fixedSettings": {
+     "speed": 0.5,
+     "clockwise": true
+    },
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 1200,
+      "default": 300
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "airFryer",
+    "displayName": "Air Fryer",
+    "supportedModuleCodes": [
+     "AIR_FRYER"
+    ],
+    "fixedSettings": {
+     "temperature": 200
+    },
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 3600
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "contactGrill",
+    "displayName": "Contact Grill",
+    "supportedModuleCodes": [
+     "CONTACT_GRILL"
+    ],
+    "fixedSettings": {
+     "temperature": 180
+    },
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 3600
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "ramp",
+    "adminOnly": true,
+    "separateParameterCards": true,
+    "supportedModuleCodes": "R",
+    "fields": [
+     {
+      "input": "ramp",
+      "speed": {
+       "min": 1,
+       "max": 10,
+       "lowerBoundary": 0,
+       "upperBoundary": 10
+      },
+      "time": {
+       "min": 1,
+       "max": 20,
+       "lowerBoundary": 0,
+       "upperBoundary": 20
+      }
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": true,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "puree",
+    "separateParameterCards": true,
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 300,
+      "default": 120
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   },
+   {
+    "name": "smoothie",
+    "separateParameterCards": true,
+    "supportedModuleCodes": "R",
+    "label": "preset",
+    "fields": [
+     {
+      "input": "time",
+      "type": "seconds",
+      "min": 1,
+      "max": 120,
+      "default": 45
+     }
+    ],
+    "beStoredParameters": {
+     "weight": false,
+     "temperature": false,
+     "speed": false,
+     "time": true
+    },
+    "requireDescription": false
+   }
+  ]
+ }
+}
