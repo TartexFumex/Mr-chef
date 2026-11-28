@@ -107,6 +107,7 @@ export const en: Dict = {
   robot: {
     programs: (list: string) => `Programs: ${list}`,
     unverified: ' · publishing to be confirmed',
+    more: (n: number) => `, +${n} more`,
     legend: 'Robot model',
   },
   errors: {
@@ -291,7 +292,7 @@ export const en: Dict = {
     start: 'Start cooking',
   },
   relay: {
-    placeholder: 'https://mr-chef-relay.your-account.workers.dev',
+    placeholder: 'https://….workers.dev',
     publicTitle: 'Mr Chef public relay',
     recommended: '(recommended)',
     publicHint: 'Nothing to install. 120 requests per minute.',
@@ -306,7 +307,7 @@ export const en: Dict = {
     guide: 'Setup guide',
     url: 'Relay address',
     secret: 'Relay secret',
-    secretHint: '(private relay only, same as RELAY_SHARED_SECRET)',
+    secretHint: '(private relay)',
     generate: 'Generate a secret',
     test: 'Test the relay',
     saveContinue: 'Save and continue',
@@ -414,12 +415,13 @@ export const en: Dict = {
   revise: {
     open: 'Rework with AI',
     label: 'What would you like to change?',
-    placeholder: 'e.g. vegetarian version, for 6 people, dairy-free, spicier…',
-    hint: (provider: string) => `Sent to ${provider}. You will choose which version to keep.`,
+    placeholder: 'Your change…',
+    ideas: ['Vegetarian version', 'Quicker', 'Spicier', 'For 6 people'],
     submit: 'Regenerate',
     thinking: 'The chef is reworking the recipe…',
     cancel: 'Cancel regeneration',
     offline: 'Regenerating needs an Internet connection.',
+    keepQuestion: 'Shall we keep it?',
     proposalTitle: 'New version suggested',
     compare: 'Version shown',
     showNew: 'New',
@@ -433,7 +435,7 @@ export const en: Dict = {
   tags: {
     label: 'Keywords',
     hint: '(comma-separated)',
-    placeholder: 'e.g. soup, winter, quick',
+    placeholder: 'soup, winter…',
     suggestions: 'Suggestions',
     searchBy: 'Search by',
     byTitle: 'Title',
