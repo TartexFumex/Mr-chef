@@ -49,3 +49,14 @@ export function buildUserPrompt(wish: string, servings: number, locale: Locale =
     ? `Request: ${wish.trim()}\nNumber of servings: ${servings}.`
     : `Demande : ${wish.trim()}\nNombre de portions souhaité : ${servings}.`
 }
+
+/**
+ * Demande de révision : le modèle reçoit la recette actuelle (au format qu'il doit
+ * renvoyer) et la modification souhaitée, et renvoie la recette complète mise à jour.
+ */
+export function buildRevisionPrompt(current: unknown, request: string, locale: Locale = 'fr'): string {
+  const json = JSON.stringify(current, null, 2)
+  return locale === 'en'
+    ? `Here is the current recipe, as JSON:\n${json}\n\nChange requested by the user: ${request.trim()}\n\nApply this change and return the complete updated recipe in the same format. Keep everything the request does not affect, and adjust what it implies (quantities, steps, times, nutrition).`
+    : `Voici la recette actuelle, au format JSON :\n${json}\n\nModification demandée par l'utilisateur : ${request.trim()}\n\nApplique cette modification et renvoie la recette complète mise à jour, au même format. Garde tout ce que la demande ne touche pas, et ajuste ce qu'elle implique (quantités, étapes, temps, valeurs nutritionnelles).`
+}

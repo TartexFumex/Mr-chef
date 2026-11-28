@@ -190,3 +190,63 @@ export function aiToRecipe(ai: AiRecipe, robot: RobotProfile): { recipe: Recipe;
   if (draft.ingredientGroups.length === 0) draft.ingredientGroups.push({ key: newKey('g'), name: 'Ingrédients', ingredients: [] })
   return fitRecipeToRobot(draft, robot)
 }
+
+/**
+ * Convertit une recette locale au format de sortie IA, pour la renvoyer au modèle
+ * comme point de départ d'une révision (même forme que ce qu'il doit produire).
+ */
+export function recipeToAi(recipe: Recipe): AiRecipe {
+  return {
+    title: recipe.title,
+    description: recipe.description,
+    hintsAndTips: recipe.hintsAndTips,
+    complexity: recipe.complexity,
+    categories: recipe.categoryIds
+      .map((id) => CATEGORIES.find((c) => c.id === id)?.label)
+      .filter((l): l is (typeof CATEGORIES)[number]['label'] => l !== undefined),
+    servings: { amount: recipe.servings.amount, unit: recipe.servings.unit },
+    preparationMinutes: recipe.preparationTime,
+    totalMinutes: recipe.readyInTime,
+    nutritionPerServing: { ...recipe.nutrients },
+    ingredientGroups: recipe.ingredientGroups.map((g) => ({
+      name: g.name,
+      ingredients: g.ingredients.map((i) => ({ name: i.name, amount: i.amount, unit: i.unit })),
+    })),
+    steps: recipe.steps.map((s) => ({
+      title: s.title,
+      description: s.description,
+      program: s.mode
+        ? {
+            type: s.mode.type,
+            timeSeconds: s.mode.settings.time ?? null,
+            temperature: s.mode.settings.temperature ?? null,
+            speed: s.mode.settings.speed ?? null,
+            reverse: s.mode.settings.clockwise ?? null,
+            weightGrams: s.mode.settings.weight ?? null,
+          }
+        : null,
+    })),
+  }
+}
+
+/**
+ * Reporte, par position, les identifiants distants de l'ancienne version sur la nouvelle,
+ * pour qu'une recette déjà publiée soit mise à jour sur place au prochain envoi
+ * (même rapprochement que `applyRemoteIds`).
+ */
+export function carryRemoteIds(next: Recipe, prev: Recipe): Recipe {
+  const rid = (id: number | undefined) => (id !== undefined ? { remoteId: id } : {})
+  return {
+    ...next,
+    servings: { ...next.servings, ...rid(prev.servings.remoteId) },
+    ingredientGroups: next.ingredientGroups.map((g, gi) => {
+      const pg = prev.ingredientGroups[gi]
+      return {
+        ...g,
+        ...rid(pg?.remoteId),
+        ingredients: g.ingredients.map((i, ii) => ({ ...i, ...rid(pg?.ingredients[ii]?.remoteId) })),
+      }
+    }),
+    steps: next.steps.map((s, si) => ({ ...s, ...rid(prev.steps[si]?.remoteId) })),
+  }
+}

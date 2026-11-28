@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { AiRecipeSchema, aiToRecipe, buildAiJsonSchema, fitRecipeToRobot, getRobot, emptyRecipe, modeHint, modeSpec, renderSystemPrompt, defaultSystemPrompt, ROBOTS } from '../src'
+import {
+  AiRecipeSchema,
+  aiToRecipe,
+  buildAiJsonSchema,
+  buildRevisionPrompt,
+  carryRemoteIds,
+  defaultSystemPrompt,
+  emptyRecipe,
+  fitRecipeToRobot,
+  getRobot,
+  modeHint,
+  modeSpec,
+  recipeToAi,
+  renderSystemPrompt,
+  ROBOTS,
+} from '../src'
 
 const robot = getRobot('connect')
 
@@ -117,5 +132,37 @@ describe('buildAiJsonSchema', () => {
     expect(program.properties!.type!.enum).toEqual(['customized', 'kneading', 'steaming', 'roasting', 'scale', 'turbo'])
     expect(schema.additionalProperties).toBe(false)
     expect(schema.required).toContain('steps')
+  })
+})
+
+describe('révision par IA', () => {
+  it('recipeToAi renvoie une forme que aiToRecipe relit à l’identique', () => {
+    const { recipe } = aiToRecipe(AiRecipeSchema.parse(aiSample), robot)
+    const ai = recipeToAi(recipe)
+    expect(AiRecipeSchema.safeParse(ai).success).toBe(true)
+    const back = aiToRecipe(AiRecipeSchema.parse(ai), robot).recipe
+    const strip = (r: typeof recipe) => JSON.parse(JSON.stringify(r, (k, v) => (k === 'key' ? undefined : v)))
+    expect(strip(back)).toEqual(strip(recipe))
+  })
+
+  it('carryRemoteIds reporte les identifiants distants par position', () => {
+    const prev = emptyRecipe()
+    prev.servings.remoteId = 7
+    prev.ingredientGroups[0]!.remoteId = 11
+    prev.ingredientGroups[0]!.ingredients = [{ key: 'a', remoteId: 21, name: 'x', amount: '1', unit: 'g' }]
+    prev.steps = [{ key: 's', remoteId: 31, title: 't', description: '', mode: null }]
+    const next = aiToRecipe(AiRecipeSchema.parse(aiSample), robot).recipe
+    const out = carryRemoteIds(next, prev)
+    expect(out.servings.remoteId).toBe(7)
+    expect(out.ingredientGroups[0]!.remoteId).toBe(11)
+    expect(out.ingredientGroups[0]!.ingredients.map((i) => i.remoteId)).toEqual([21, undefined, undefined])
+    expect(out.steps.map((s) => s.remoteId)).toEqual([31, undefined, undefined, undefined])
+  })
+
+  it('le prompt de révision contient la recette et la demande', () => {
+    const p = buildRevisionPrompt({ title: 'Soupe' }, ' sans gluten ', 'fr')
+    expect(p).toContain('"title": "Soupe"')
+    expect(p).toContain('sans gluten')
+    expect(buildRevisionPrompt({}, 'vegan', 'en')).toContain('Change requested by the user: vegan')
   })
 })
