@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import { fitSettings, modeText, type DeviceSettings, type ModeSpec, type RobotProfile, type StepMode } from '@mr-chef/recipe-schema'
+import { fitSettings, maxSpeedFor, maxTimeFor, modeHint, modeText, type DeviceSettings, type ModeSpec, type RobotProfile, type StepMode } from '@mr-chef/recipe-schema'
 import { Dialog } from './Dialog'
 import { useLang, useT } from '../i18n'
 import { NumberInput } from './NumberInput'
 
 function temperatureOptions(spec: ModeSpec): number[] {
   const r = spec.temperature!
-  const out = [...(r.also ?? [])]
+  if (r.values?.length) return r.values
+  const out: number[] = []
+  const step = r.step ?? 5
   out.push(r.min)
-  const step = r.step ?? 1
   for (let t = Math.ceil((r.min + 1) / step) * step; t <= r.max; t += step) out.push(t)
-  return [...new Set(out)]
+  if (out[out.length - 1] !== r.max) out.push(r.max)
+  return out
 }
 
 /** Feuille de réglage du programme d'une étape, limitée aux programmes et plages du robot. */
@@ -35,8 +37,9 @@ export function ModeEditor({
   const fitted = spec ? fitSettings(spec, settings, []) : {}
   const set = (patch: DeviceSettings) => setSettingsState((s) => ({ ...s, ...patch }))
   const time = fitted.time ?? 0
-  const maxSpeed =
-    spec?.speed && spec.maxSpeedWhenHeating && (fitted.temperature ?? 0) > 0 ? spec.maxSpeedWhenHeating : spec?.speed?.max
+  const maxSpeed = spec ? maxSpeedFor(spec, fitted) : undefined
+  const maxTime = spec ? (maxTimeFor(spec, fitted) ?? 0) : 0
+  const minutesOnly = spec?.timeUnit === 'minutes'
 
   return (
     <Dialog
@@ -70,18 +73,19 @@ export function ModeEditor({
             ))}
           </select>
         </label>
-        {spec && <p className="muted small">{modeText(spec.type, lang).hint}</p>}
+        {spec && <p className="muted small">{modeHint(spec, lang)}</p>}
         {spec?.time && (
           <div className="grid2">
             <label className="field">
               <span>{t.modeEditor.minutes}</span>
               <NumberInput
                 min={0}
-                max={Math.floor(spec.time.max / 60)}
+                max={Math.floor(maxTime / 60)}
                 value={Math.floor(time / 60)}
-                onChange={(m) => set({ time: m * 60 + (time % 60) })}
+                onChange={(m) => set({ time: m * 60 + (minutesOnly ? 0 : time % 60) })}
               />
             </label>
+            {!minutesOnly && (
             <label className="field">
               <span>{t.modeEditor.seconds}</span>
               <NumberInput
@@ -91,6 +95,7 @@ export function ModeEditor({
                 onChange={(s) => set({ time: Math.floor(time / 60) * 60 + s })}
               />
             </label>
+            )}
           </div>
         )}
         {spec?.temperature && (
@@ -109,12 +114,13 @@ export function ModeEditor({
           <label className="field">
             <span>
               {t.modeEditor.speed} <span className="mono">{fitted.speed}</span>
-              {maxSpeed !== spec.speed.max && <span className="hint">{t.modeEditor.maxHeating}</span>}
+              {maxSpeed !== undefined && maxSpeed !== spec.speed.max && <span className="hint">{t.modeEditor.maxSpeed(maxSpeed)}</span>}
             </span>
             <input
               type="range"
               min={spec.speed.min}
               max={maxSpeed}
+              step={spec.speed.step ?? 1}
               value={fitted.speed ?? spec.speed.min}
               onChange={(e) => set({ speed: Number(e.target.value) })}
               style={{ width: '100%', accentColor: 'var(--sapin-2)' }}

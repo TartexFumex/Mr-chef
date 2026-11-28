@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AiRecipeSchema, aiToRecipe, buildAiJsonSchema, fitRecipeToRobot, getRobot, emptyRecipe } from '../src'
+import { AiRecipeSchema, aiToRecipe, buildAiJsonSchema, fitRecipeToRobot, getRobot, emptyRecipe, modeHint, modeSpec, renderSystemPrompt, defaultSystemPrompt, ROBOTS } from '../src'
 
 const robot = getRobot('connect')
 
@@ -49,12 +49,63 @@ describe('aiToRecipe', () => {
     expect(fixes.length).toBeGreaterThanOrEqual(3)
   })
 
-  it('retire un programme absent du robot choisi', () => {
+  it('retire un programme sans équivalent sur le robot choisi', () => {
     const r = emptyRecipe()
-    r.steps.push({ key: 's1', title: 'Pétrir', description: '', mode: { type: 'kneading', settings: { time: 60 } } })
+    r.steps.push({ key: 's1', title: 'Œufs', description: '', mode: { type: 'cookingEggs', settings: {} } })
     const { recipe, fixes } = fitRecipeToRobot(r, getRobot('compact'))
     expect(recipe.steps[0]!.mode).toBeNull()
-    expect(fixes[0]!.message).toContain('indisponible')
+    expect(fixes[0]!.kind).toBe('unavailable')
+  })
+
+  it('remplace un programme par son équivalent en changeant de robot', () => {
+    const r = emptyRecipe()
+    r.steps.push(
+      { key: 's1', title: 'Pétrir', description: '', mode: { type: 'kneading', settings: { time: 120 } } },
+      { key: 's2', title: 'Sous vide', description: '', mode: { type: 'sousVide', settings: { time: 7200, temperature: 62 } } },
+    )
+    const smart = fitRecipeToRobot(r, getRobot('smart'))
+    expect(smart.recipe.steps[0]!.mode).toEqual({ type: 'kneadingSolidDough', settings: { time: 120 } })
+    expect(smart.recipe.steps[1]!.mode).toEqual({ type: 'sousVide', settings: { time: 7200, temperature: 62 } })
+    const back = fitRecipeToRobot(smart.recipe, getRobot('connect'))
+    expect(back.recipe.steps[0]!.mode).toEqual({ type: 'kneading', settings: { time: 120 } })
+    // Sous vide → cuisson personnalisée, 62 °C arrondi au palier de 5, sens inverse, vitesse 1.
+    expect(back.recipe.steps[1]!.mode).toEqual({ type: 'customized', settings: { time: 5940, temperature: 60, clockwise: true, speed: 1 } })
+    expect(back.fixes.filter((f) => f.kind === 'replaced')).toHaveLength(2)
+  })
+
+  it('applique les bridages de vitesse propres à chaque robot', () => {
+    const r = emptyRecipe()
+    r.steps.push({ key: 's1', title: 'Mixer', description: '', mode: { type: 'customized', settings: { time: 900, temperature: 0, speed: 10, clockwise: false } } })
+    // Compact : 6 maximum au-delà de 10 min.
+    expect(fitRecipeToRobot(r, getRobot('compact')).recipe.steps[0]!.mode!.settings.speed).toBe(6)
+    // Connect : pas de bridage sans chauffe.
+    expect(fitRecipeToRobot(r, getRobot('connect')).recipe.steps[0]!.mode!.settings.speed).toBe(10)
+    // MC4 : 10 min maximum à partir de la vitesse 6.
+    expect(fitRecipeToRobot(r, getRobot('mc4')).recipe.steps[0]!.mode!.settings).toMatchObject({ speed: 10, time: 600 })
+    // MC4 : demi-vitesses, 4 maximum en chauffe.
+    r.steps[0]!.mode!.settings = { time: 60, temperature: 90, speed: 2.4, clockwise: true }
+    expect(fitRecipeToRobot(r, getRobot('mc4')).recipe.steps[0]!.mode!.settings.speed).toBe(2.5)
+    // Compact : turbo sans durée.
+    r.steps[0]!.mode = { type: 'turbo', settings: { time: 5 } }
+    expect(fitRecipeToRobot(r, getRobot('compact')).recipe.steps[0]!.mode!.settings).toEqual({})
+  })
+})
+
+describe('prompt et explications', () => {
+  it('ne liste que les programmes du robot, avec ses plages', () => {
+    const compact = renderSystemPrompt(defaultSystemPrompt('fr'), getRobot('compact'), 'fr')
+    expect(compact).toContain('- kneading (Pétrir) : Pétrissage de pâte. Durée 45 s à 1 min 30 s.')
+    expect(compact).not.toContain('sousVide')
+    const smart = renderSystemPrompt(defaultSystemPrompt('en'), getRobot('smart'), 'en')
+    expect(smart).toContain('sousVide')
+    expect(smart).not.toContain('- kneading ')
+    expect(modeHint(modeSpec(getRobot('compact'), 'customized')!, 'fr')).toContain(
+      'température 0 (sans chauffe) ou 37 à 130 °C par pas de 5, vitesse 1 à 10 (3 maximum dès qu’on chauffe, 3 maximum en sens inverse, 6 maximum au-delà de 10 min)',
+    )
+  })
+
+  it('a un libellé pour chaque programme de chaque robot', () => {
+    for (const r of ROBOTS) for (const m of r.modes) expect(modeHint(m, 'en')).not.toMatch(/^ /)
   })
 })
 
@@ -63,7 +114,7 @@ describe('buildAiJsonSchema', () => {
     type Node = { [k: string]: Node } & { enum?: string[]; anyOf?: Node[]; required?: string[]; additionalProperties?: boolean }
     const schema = buildAiJsonSchema(getRobot('compact')) as unknown as Node
     const program = schema.properties!.steps!.items!.properties!.program!.anyOf![1]!
-    expect(program.properties!.type!.enum).toEqual(['customized', 'turbo', 'scale'])
+    expect(program.properties!.type!.enum).toEqual(['customized', 'kneading', 'steaming', 'roasting', 'scale', 'turbo'])
     expect(schema.additionalProperties).toBe(false)
     expect(schema.required).toContain('steps')
   })
