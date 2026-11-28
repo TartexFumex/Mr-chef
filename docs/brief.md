@@ -8,7 +8,7 @@ architecture, how the app reaches the Lidl account, the visual identity and the 
   No cookie, code or token value from those files is reproduced here.
 - First written on 27 November 2026 (phase 1 brief, validated). This version is updated to match
   the code as built: npm workspaces, public relay, device transfer by QR code, French and English UI,
-  install prompt, read-only recipe view and folders.
+  install prompt, read-only recipe view and keywords.
 - The images in [`docs/brief/`](brief/) come from the phase 1 brief. They show the original design,
   with French labels, and may differ from the app on details noted next to each one.
 
@@ -87,7 +87,8 @@ default, and the app is served from GitHub Pages rather than its own domain.*
 recipes   id, title, createdAt, updatedAt, robotId, recipe, imageId, hash, remoteId,
           sync { remoteId, publishedHash, remoteStatus, remoteUpdatedAt, lastSyncedAt,
                  media, conflict, error },
-          pending (publish | unpublish | null), origin { provider, model, prompt }
+          pending (publish | unpublish | null), origin { provider, model, prompt },
+          tags (local keywords, outside the hash, never sent to Monsieur Cuisine)
 media     id, blob, createdAt
 kv        settings: onboardingDone, robotId, activeProvider, models, systemPrompt,
           relayMode, relayUrl, mcUser, mcExpiresAt, sessionExpired, defaultServings,
@@ -95,6 +96,9 @@ kv        settings: onboardingDone, robotId, activeProvider, models, systemPromp
 secrets   id, iv, data (AI keys, relay secret, Monsieur Cuisine session, encrypted)
 keys      the non-extractable WebCrypto key
 ```
+
+Database version 3 replaced the short-lived recipe folders with keywords: each recipe's folder name
+becomes one of its keywords during the upgrade.
 
 ### Storing secrets
 
@@ -301,10 +305,12 @@ Status badges and empty states:
 4. **Recipe view**: opening a recipe from the library shows it read-only (photo, details,
    ingredients, steps with their robot programs, tips, nutrition) so it cannot be changed by
    accident; **Edit** opens the editor, whose **Done** button goes back to the view. The recipe's
-   folder is chosen here.
-5. **Library**: search, filters by state and by folder (remembered), folder management (create,
-   rename, delete; recipes of a deleted folder move to "No folder"), Sync button, empty state with
-   shortcuts. Folders are local only and never sent to Monsieur Cuisine.
+   keywords are listed at the bottom; tapping one searches the library for it.
+5. **Library**: search by title or by keyword (a toggle next to the search field, with keyword
+   suggestions), filters by state, up to three keywords on each recipe, Sync button, empty state
+   with shortcuts. Keywords are typed at the bottom of the editor, separated by commas, with
+   autocompletion from the keywords already used. They are local only and never sent to
+   Monsieur Cuisine.
 6. **Settings**: language, AI keys and models per provider, robot and default servings, system
    prompt, relay, transfer to another device, Monsieur Cuisine account, and sign-out with a warning
    that lists unpublished recipes that would be lost.
@@ -332,7 +338,7 @@ main differences are noted under each one.
 
 ![Library and settings wireframes, sign-out warning](brief/wireframes-library-settings.png)
 
-*Library and Settings. Folders and language settings were added later.*
+*Library and Settings. Keywords and language settings were added later.*
 
 ## 9. Still open
 

@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { emptyRecipe } from '@mr-chef/recipe-schema'
 import { useOnline } from '../components/Banners'
-import { FolderManager } from '../components/FolderManager'
 import { Icon } from '../components/Icon'
 import { StatusBadge } from '../components/StatusBadge'
 import { toast, toastError } from '../components/toast'
@@ -11,13 +10,14 @@ import type { RecipeRecord } from '../db/db'
 import { formatMinutes, relativeTime } from '../lib/format'
 import { errorMessage, hasRelay } from '../lib/mc'
 import { createRecipeRecord, syncStateOf, useImageUrl, useRecipes } from '../lib/recipes'
-import { moveRecipe, NO_FOLDER, useFolders } from '../lib/folders'
-import { setSettings, useSettings } from '../lib/settings'
+import { useSettings } from '../lib/settings'
+import { foldTag, matchesTag, suggestTags, useAllTags } from '../lib/tags'
 import { processPendingQueue, refreshFromRemote } from '../lib/sync'
 import { useT } from '../i18n'
 
 type Filter = 'all' | 'local' | 'published' | 'desynced'
 const FILTERS: Filter[] = ['all', 'local', 'published', 'desynced']
+type SearchMode = 'title' | 'tag'
 
 export function Library() {
   const recipes = useRecipes()
@@ -26,20 +26,15 @@ export function Library() {
   const online = useOnline()
   const navigate = useNavigate()
   const [filter, setFilter] = useState<Filter>('all')
-  const [query, setQuery] = useState('')
+  const location = useLocation()
+  // Un mot-clé touché dans la vue lecture arrive ici comme recherche par mot-clé.
+  const fromTag = (location.state as { tag?: string } | null)?.tag
+  const [mode, setMode] = useState<SearchMode>(fromTag ? 'tag' : 'title')
+  const [query, setQuery] = useState(fromTag ?? '')
+  const [searching, setSearching] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [managing, setManaging] = useState(false)
-  const folders = useFolders() ?? []
-  const folderNames = new Map(folders.map((f) => [f.id, f.name]))
-  const folderOf = (r: RecipeRecord) => (r.folderId && folderNames.has(r.folderId) ? r.folderId : null)
-  const counts = new Map<string, number>()
-  for (const r of recipes ?? []) {
-    const f = folderOf(r)
-    if (f) counts.set(f, (counts.get(f) ?? 0) + 1)
-  }
-  const stored = settings?.libraryFolder ?? null
-  const folder = stored === NO_FOLDER || (stored && folderNames.has(stored)) ? stored : null
-  const chooseFolder = (value: string | null) => void setSettings({ libraryFolder: value })
+  const allTags = useAllTags()
+  const tagSuggestions = mode === 'tag' && searching ? suggestTags(allTags, query, 10) : []
 
   async function refresh() {
     setRefreshing(true)
@@ -67,15 +62,13 @@ export function Library() {
       robotId: settings!.robotId,
       origin: { provider: 'manual', model: null, prompt: null },
     })
-    if (folder && folder !== NO_FOLDER) await moveRecipe(id, folder)
     navigate(`/recette/${id}/modifier`)
   }
 
-  const q = query.trim().toLowerCase()
+  const q = foldTag(query)
   const shown = (recipes ?? []).filter((r) => {
-    if (q && !r.title.toLowerCase().includes(q)) return false
-    if (folder === NO_FOLDER && folderOf(r)) return false
-    if (folder && folder !== NO_FOLDER && folderOf(r) !== folder) return false
+    if (mode === 'title' && q && !foldTag(r.title).includes(q)) return false
+    if (mode === 'tag' && !matchesTag(r.tags, query)) return false
     return filter === 'all' || syncStateOf(r) === filter
   })
 
@@ -93,27 +86,34 @@ export function Library() {
         </button>
       </TopBar>
       <main className="main stack">
-        <input type="search" placeholder={t.library.search} aria-label={t.library.searchLabel} value={query} onChange={(e) => setQuery(e.target.value)} />
-        <div className="chips folder-chips" role="group" aria-label={t.folders.filter}>
-          {folders.length > 0 && (
-            <>
-              <button type="button" className="chip" aria-pressed={folder === null} onClick={() => chooseFolder(null)}>
-                {t.folders.all}
+        <div className="search-bar">
+          <input
+            type="search"
+            className="grow"
+            placeholder={mode === 'tag' ? t.tags.searchTag : t.library.search}
+            aria-label={mode === 'tag' ? t.tags.searchTag : t.library.search}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => setSearching(true)}
+            onBlur={() => setSearching(false)}
+          />
+          <div className="segmented" role="group" aria-label={t.tags.searchBy}>
+            {(['title', 'tag'] as const).map((m) => (
+              <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)}>
+                {m === 'title' ? t.tags.byTitle : t.tags.byTag}
               </button>
-              {folders.map((f) => (
-                <button key={f.id} type="button" className="chip" aria-pressed={folder === f.id} onClick={() => chooseFolder(f.id)}>
-                  <Icon name="folder" /> {f.name} <span className="muted small">{counts.get(f.id) ?? 0}</span>
-                </button>
-              ))}
-              <button type="button" className="chip" aria-pressed={folder === NO_FOLDER} onClick={() => chooseFolder(NO_FOLDER)}>
-                {t.folders.none}
-              </button>
-            </>
-          )}
-          <button type="button" className="btn ghost" onClick={() => setManaging(true)}>
-            <Icon name="folder" /> {t.folders.manage}
-          </button>
+            ))}
+          </div>
         </div>
+        {tagSuggestions.length > 0 && (
+          <div className="chips tag-suggestions" role="group" aria-label={t.tags.suggestions}>
+            {tagSuggestions.map((tag) => (
+              <button key={tag} type="button" className="chip" onMouseDown={(e) => e.preventDefault()} onClick={() => setQuery(tag)}>
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="chips" role="group" aria-label={t.library.filter}>
           {FILTERS.map((f) => (
             <button key={f} type="button" className="chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>
@@ -136,9 +136,9 @@ export function Library() {
             </div>
           </div>
         ) : (
-          <ul className="list">
+          <ul className="list library-list">
             {shown.map((r) => (
-              <RecipeItem key={r.id} rec={r} folderName={folder ? null : (folderNames.get(folderOf(r) ?? '') ?? null)} />
+              <RecipeItem key={r.id} rec={r} />
             ))}
             {recipes && shown.length === 0 && <li className="muted">{t.library.noMatch}</li>}
           </ul>
@@ -147,12 +147,11 @@ export function Library() {
           <Icon name="plus" /> {t.library.blank}
         </button>
       </main>
-      <FolderManager open={managing} onClose={() => setManaging(false)} folders={folders} counts={counts} />
     </>
   )
 }
 
-function RecipeItem({ rec, folderName }: { rec: RecipeRecord; folderName: string | null }) {
+function RecipeItem({ rec }: { rec: RecipeRecord }) {
   const url = useImageUrl(rec.imageId)
   const t = useT()
   return (
@@ -165,11 +164,11 @@ function RecipeItem({ rec, folderName }: { rec: RecipeRecord; folderName: string
             <StatusBadge rec={rec} />
             <span>{formatMinutes(rec.recipe.readyInTime)}</span>
             <span>{t.library.modified(relativeTime(rec.updatedAt))}</span>
-            {folderName && (
-              <span className="nowrap">
-                <Icon name="folder" /> {folderName}
+            {(rec.tags ?? []).slice(0, 3).map((tag) => (
+              <span key={tag} className="tag small">
+                {tag}
               </span>
-            )}
+            ))}
           </span>
         </span>
       </Link>

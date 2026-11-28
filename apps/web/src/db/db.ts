@@ -34,14 +34,8 @@ export interface RecipeRecord {
   sync: SyncMeta
   pending: PendingOp
   origin: { provider: ProviderId | 'import' | 'manual'; model: string | null; prompt: string | null }
-  /** Dossier local de rangement (jamais envoyé à Monsieur Cuisine). */
-  folderId?: string | null
-}
-
-export interface FolderRecord {
-  id: string
-  name: string
-  createdAt: number
+  /** Mots-clés locaux pour filtrer la bibliothèque (jamais envoyés à Monsieur Cuisine). */
+  tags?: string[]
 }
 
 export interface MediaRecord {
@@ -72,7 +66,6 @@ export class MrChefDb extends Dexie {
   kv!: EntityTable<KvRecord, 'key'>
   secrets!: EntityTable<SecretRecord, 'id'>
   keys!: EntityTable<KeyRecord, 'id'>
-  folders!: EntityTable<FolderRecord, 'id'>
 
   constructor(name = 'mr-chef') {
     super(name)
@@ -84,6 +77,24 @@ export class MrChefDb extends Dexie {
       keys: 'id',
     })
     this.version(2).stores({ folders: 'id, name' })
+    // Les dossiers deviennent des mots-clés : le nom du dossier est ajouté aux mots-clés de ses recettes.
+    this.version(3)
+      .stores({ folders: null })
+      .upgrade(async (tx) => {
+        const folders = (await tx.table('folders').toArray()) as { id: string; name: string }[]
+        const names = new Map(folders.map((f) => [f.id, f.name]))
+        await tx
+          .table('recipes')
+          .toCollection()
+          .modify((r: RecipeRecord & { folderId?: string | null }) => {
+            const name = r.folderId ? names.get(r.folderId) : undefined
+            if (name) {
+              const tags = r.tags ?? []
+              if (!tags.some((t) => t.toLowerCase() === name.toLowerCase())) r.tags = [...tags, name]
+            }
+            delete r.folderId
+          })
+      })
   }
 }
 
