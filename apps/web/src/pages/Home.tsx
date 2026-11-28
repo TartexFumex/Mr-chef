@@ -9,6 +9,7 @@ import { createRecipeRecord } from '../lib/recipes'
 import { useSettings } from '../lib/settings'
 import { useOnline } from '../components/Banners'
 import { useLang, useT } from '../i18n'
+import { NumberInput } from '../components/NumberInput'
 
 export function Home() {
   const settings = useSettings()
@@ -85,12 +86,11 @@ export function Home() {
           <div className="row">
             <label className="row grow" style={{ gap: 8 }}>
               <span>{t.home.servings}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={1}
                 max={20}
                 value={portions}
-                onChange={(e) => setServings(Math.max(1, Math.min(20, Number(e.target.value) || 1)))}
+                onChange={setServings}
                 style={{ width: 80 }}
               />
             </label>

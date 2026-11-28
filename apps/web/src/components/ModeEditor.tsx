@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { fitSettings, modeText, type DeviceSettings, type ModeSpec, type RobotProfile, type StepMode } from '@mr-chef/recipe-schema'
 import { Dialog } from './Dialog'
 import { useLang, useT } from '../i18n'
+import { NumberInput } from './NumberInput'
 
 function temperatureOptions(spec: ModeSpec): number[] {
   const r = spec.temperature!
@@ -74,22 +75,20 @@ export function ModeEditor({
           <div className="grid2">
             <label className="field">
               <span>{t.modeEditor.minutes}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={0}
                 max={Math.floor(spec.time.max / 60)}
                 value={Math.floor(time / 60)}
-                onChange={(e) => set({ time: (Number(e.target.value) || 0) * 60 + (time % 60) })}
+                onChange={(m) => set({ time: m * 60 + (time % 60) })}
               />
             </label>
             <label className="field">
               <span>{t.modeEditor.seconds}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={0}
                 max={59}
                 value={time % 60}
-                onChange={(e) => set({ time: Math.floor(time / 60) * 60 + Math.min(59, Number(e.target.value) || 0) })}
+                onChange={(s) => set({ time: Math.floor(time / 60) * 60 + s })}
               />
             </label>
           </div>
@@ -131,12 +130,11 @@ export function ModeEditor({
         {spec?.weight && (
           <label className="field">
             <span>{t.modeEditor.weight}</span>
-            <input
-              type="number"
+            <NumberInput
               min={spec.weight.min}
               max={spec.weight.max}
               value={fitted.weight ?? spec.weight.min}
-              onChange={(e) => set({ weight: Number(e.target.value) || spec.weight!.min })}
+              onChange={(weight) => set({ weight })}
             />
           </label>
         )}
