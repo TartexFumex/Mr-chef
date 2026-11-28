@@ -8,7 +8,7 @@ import { StatusBadge } from '../components/StatusBadge'
 import { toast, toastError } from '../components/toast'
 import { TopBar } from '../components/TopBar'
 import type { RecipeRecord } from '../db/db'
-import { categoryLabel, describeFix, unitLabel, useLang, useT } from '../i18n'
+import { categoryLabel, unitLabel, useLang, useT } from '../i18n'
 import { PROVIDERS, reviseRecipe, type GenerationResult } from '../lib/ai'
 import { formatMinutes, modeSummary } from '../lib/format'
 import { errorMessage } from '../lib/mc'
@@ -61,7 +61,6 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
   const provider = settings?.activeProvider ? PROVIDERS[settings.activeProvider] : null
   const canRevise = online && !!provider && !busy && !proposal
   const shown = proposal && showing === 'new' ? proposal.recipe : rec.recipe
-  const robot = getRobot(rec.robotId)
 
   async function revise(e?: React.FormEvent) {
     e?.preventDefault()
@@ -105,7 +104,7 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
       <TopBar title={shown.title || t.editor.untitled} back="/recettes">
         <StatusBadge rec={rec} />
       </TopBar>
-      <main className="main recipe-view">
+      <main className={proposal ? 'main recipe-view with-bar' : 'main recipe-view'}>
         {busy && (
           <div className="revise-pending" role="status" aria-live="polite">
             <div className="revise-wait">
@@ -120,40 +119,31 @@ function RecipeViewLoaded({ rec }: { rec: RecipeRecord }) {
         )}
 
         {proposal && (
-          <div className="revise-choice stack" role="region" aria-label={t.revise.proposalTitle}>
-            <ChefSays size={44}>
-              <strong>{t.revise.proposalTitle}.</strong> {t.revise.keepQuestion}
-            </ChefSays>
-            <div className="row">
-              <span className="small muted grow">{t.revise.requested(request.trim())}</span>
-              <div className="segmented" role="group" aria-label={t.revise.compare}>
-                <button type="button" aria-pressed={showing === 'new'} onClick={() => setShowing('new')}>
-                  {t.revise.showNew}
+          <>
+            <div className="revise-bar" role="region" aria-label={t.revise.proposalTitle}>
+              <ChefSays size={36}>
+                <strong>{showing === 'new' ? `${t.revise.proposalTitle}.` : t.revise.showingOld}</strong> {t.revise.keepQuestion}
+              </ChefSays>
+              <div className="revise-actions">
+                <button
+                  type="button"
+                  className="btn icon-only"
+                  aria-pressed={showing === 'old'}
+                  aria-label={showing === 'new' ? t.revise.viewOld : t.revise.viewNew}
+                  title={showing === 'new' ? t.revise.viewOld : t.revise.viewNew}
+                  onClick={() => setShowing(showing === 'new' ? 'old' : 'new')}
+                >
+                  <Icon name="eye" />
                 </button>
-                <button type="button" aria-pressed={showing === 'old'} onClick={() => setShowing('old')}>
-                  {t.revise.showOld}
+                <button type="button" className="btn" aria-label={t.revise.keepOld} onClick={reject}>
+                  <Icon name="close" /> {t.revise.no}
+                </button>
+                <button type="button" className="btn primary" aria-label={t.revise.replace} onClick={() => void accept()}>
+                  <Icon name="check" /> {t.revise.yes}
                 </button>
               </div>
             </div>
-            {proposal.fixes.length > 0 && (
-              <details className="small">
-                <summary>{t.editor.adjustments(proposal.fixes.length, robot.name)}</summary>
-                <ul className="fixes">
-                  {proposal.fixes.map((f, i) => (
-                    <li key={i}>{describeFix(f, t, robot.name, lang)}</li>
-                  ))}
-                </ul>
-              </details>
-            )}
-            <div className="row end">
-              <button type="button" className="btn" onClick={reject}>
-                {t.revise.keepOld}
-              </button>
-              <button type="button" className="btn primary" onClick={() => void accept()}>
-                <Icon name="check" /> {t.revise.replace}
-              </button>
-            </div>
-          </div>
+          </>
         )}
 
         {rec.sync.conflict && (
